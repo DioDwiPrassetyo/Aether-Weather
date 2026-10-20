@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aether Weather — Dashboard Cuaca Modern & Akurat</title>
+    <meta name="description" content="Aplikasi cuaca modern dengan prakiraan cuaca real-time, prakiraan per jam, 5 hari ke depan, indeks kualitas udara (AQI), dan radar animasi dinamis.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="clear-day">
+    <!-- Dynamic Animated Weather Canvas Background -->
+    <canvas id="weather-canvas" class="weather-canvas"></canvas>
+    <div class="ambient-glow"></div>
+
+    <div class="app-layout">
+        <!-- Top Navigation & Search Bar -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="brand-icon">
+                    <i data-lucide="cloud-sun" class="icon-brand"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>Aether<span>Weather</span></h1>
+                    <span class="brand-subtitle">Real-Time Weather Intelligence</span>
+                </div>
+            </div>
+
+            <!-- Central Search Bar with Autocomplete -->
+            <div class="search-container">
+                <div class="search-input-wrapper">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input 
+                        type="text" 
+                        id="city-input" 
+                        placeholder="Cari kota atau daerah (tekan '/' untuk cari)..." 
+                        autocomplete="off" 
+                        spellcheck="false"
+                    >
+                    <button id="clear-search-btn" class="clear-search-btn" title="Hapus pencarian" style="display: none;">
+                        <i data-lucide="x"></i>
+                    </button>
+                    <button id="gps-btn" class="gps-btn" title="Gunakan Lokasi Saya Saat Ini">
+                        <i data-lucide="map-pin"></i>
+                        <span class="gps-pulse"></span>
+                    </button>
+                </div>
+                
+                <!-- Autocomplete Dropdown List -->
+                <div id="autocomplete-list" class="autocomplete-list"></div>
+            </div>
+
+            <!-- Header Controls: Unit Switcher & Refresh -->
+            <div class="header-controls">
+                <div class="unit-toggle" id="unit-toggle" role="radiogroup" aria-label="Temperature Unit">
+                    <button class="unit-btn active" data-unit="metric" id="btn-celsius">°C</button>
+                    <button class="unit-btn" data-unit="imperial" id="btn-fahrenheit">°F</button>
+                </div>
+
+                <button id="favorite-btn" class="control-btn" title="Simpan ke Favorit">
+                    <i data-lucide="bookmark" id="favorite-icon"></i>
+                </button>
+
+                <button id="refresh-btn" class="control-btn" title="Segarkan Data Cuaca">
+                    <i data-lucide="refresh-cw" id="refresh-icon"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Quick Access Cities & Favorites Bar -->
+        <div class="quick-bar">
+            <div class="quick-chips-wrapper">
+                <span class="quick-label"><i data-lucide="flame"></i> Populer:</span>
+                <div class="chips-list" id="popular-chips">
+                    <button class="chip" data-city="Jakarta">Jakarta</button>
+                    <button class="chip" data-city="Surabaya">Surabaya</button>
+                    <button class="chip" data-city="Bandung">Bandung</button>
+                    <button class="chip" data-city="Bali">Bali</button>
+                    <button class="chip" data-city="Tokyo">Tokyo</button>
+                    <button class="chip" data-city="Singapore">Singapore</button>
+                    <button class="chip" data-city="London">London</button>
+                    <button class="chip" data-city="New York">New York</button>
+                </div>
+            </div>
+
+            <!-- Saved Favorites List -->
+            <div class="favorites-wrapper" id="favorites-wrapper" style="display: none;">
+                <span class="quick-label"><i data-lucide="star"></i> Favorit:</span>
+                <div class="chips-list" id="favorites-chips"></div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Content -->
+        <main class="dashboard" id="weather-dashboard">
+            <!-- Loading Skeleton Overlay -->
+            <div id="loading-skeleton" class="loading-skeleton" style="display: none;">
+                <div class="skeleton-spinner">
+                    <div class="spinner-ring"></div>
+                    <i data-lucide="cloud-sun" class="spinner-icon"></i>
+                </div>
+                <p>Memuat data atmosfer terkini...</p>
+            </div>
+
+            <!-- Left Column: Current Weather Hero & Hourly Forecast -->
+            <section class="column-left">
+                <!-- Hero Weather Card -->
+                <div class="glass-card hero-card" id="hero-card">
+                    <div class="hero-top">
+                        <div class="location-info">
+                            <div class="location-title-row">
+                                <i data-lucide="map-pin" class="loc-pin"></i>
+                                <h2 id="city-name">Memuat Kota...</h2>
+                                <span class="country-badge" id="country-badge">ID</span>
+                            </div>
+                            <p class="local-time" id="local-time">
+                                <i data-lucide="clock"></i> <span id="clock-text">--:--:--</span> &bull; <span id="date-text">Hari, DD Bln YYYY</span>
+                            </p>
+                        </div>
+                        <div class="weather-condition-pill" id="condition-pill">
+                            <span id="condition-headline">--</span>
+                        </div>
+                    </div>
+
+                    <div class="hero-center">
+                        <div class="hero-icon-container" id="hero-icon-container">
+                            <!-- Animated SVG / Weather Illustration Injected via JS -->
+                            <div class="weather-art-wrapper" id="weather-art">
+                                <div class="sun-flare"></div>
+                            </div>
+                        </div>
+
+                        <div class="hero-temp-group">
+                            <div class="temp-row">
+                                <span class="temp-value" id="current-temp">--</span>
+                                <span class="temp-unit" id="display-unit">°C</span>
+                            </div>
+                            <p class="feels-like-text" id="feels-like-text">
+                                Terasa seperti <strong id="feels-like-temp">--°</strong>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="hero-stats-bar">
+                        <div class="hero-stat-item">
+                            <i data-lucide="arrow-up" class="stat-icon-up"></i>
+                            <div>
+                                <span class="stat-label">Tertinggi</span>
+                                <span class="stat-val" id="temp-max">--°</span>
+                            </div>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="hero-stat-item">
+                            <i data-lucide="arrow-down" class="stat-icon-down"></i>
+                            <div>
+                                <span class="stat-label">Terendah</span>
+                                <span class="stat-val" id="temp-min">--°</span>
+                            </div>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="hero-stat-item">
+                            <i data-lucide="wind"></i>
+                            <div>
+                                <span class="stat-label">Angin</span>
+                                <span class="stat-val" id="hero-wind">-- km/j</span>
+                            </div>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="hero-stat-item">
+                            <i data-lucide="droplets"></i>
+                            <div>
+                                <span class="stat-label">Kelembapan</span>
+                                <span class="stat-val" id="hero-humidity">--%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hourly Forecast Carousel (Next 24 Hours) -->
+                <div class="glass-card hourly-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i data-lucide="clock-3"></i>
+                            <h3>Prakiraan Tiap Jam</h3>
+                            <span class="badge-sub">24 Jam ke Depan</span>
+                        </div>
+                        <span class="scroll-hint"><i data-lucide="move-horizontal"></i> Geser</span>
+                    </div>
+
+                    <div class="hourly-scroll-track" id="hourly-forecast-track">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Column: Atmospheric Metric Cards (8 Highlights) -->
+            <section class="column-right">
+                <div class="highlights-grid">
+                    <!-- 1. Wind & Compass -->
+                    <div class="glass-card metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title"><i data-lucide="wind"></i> Angin & Arah</span>
+                            <span class="metric-badge" id="wind-scale-badge">Tenang</span>
+                        </div>
+                        <div class="metric-body wind-body">
+                            <div class="compass-container">
+                                <div class="compass-dial">
+                                    <span class="compass-point n">U</span>
+                                    <span class="compass-point e">T</span>
+                                    <span class="compass-point s">S</span>
+                                    <span class="compass-point w">B</span>
+                                    <div class="compass-arrow" id="compass-arrow">
+                                        <div class="arrow-pointer"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="wind-info-group">
+                                <div class="metric-val-group">
+                                    <span class="metric-main-value" id="wind-speed">--</span>
+                                    <span class="metric-sub-unit" id="wind-unit">km/j</span>
+                                </div>
+                                <p class="metric-note" id="wind-direction-text">Arah: --°</p>
+                                <p class="metric-subtext" id="wind-gust-text">Hembusan: -- km/j</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Humidity & Dew Point -->
+                    <div class="glass-card metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title"><i data-lucide="droplet"></i> Kelembapan</span>
+                            <span class="metric-badge" id="humidity-badge">Normal</span>
+                        </div>
+                        <div class="metric-body">
+                            <div class="metric-val-group">
+                                <span class="metric-main-value" id="humidity-val">--</span>
+                                <span class="metric-sub-unit">%</span>
+                            </div>
+                            <div class="progress-bar-wrap">
+                                <div class="progress-bar-fill" id="humidity-progress" style="width: 0%;"></div>
+                            </div>
+                            <p class="metric-subtext" id="dew-point-text">Titik Embun: --°C</p>
+                        </div>
+                    </div>
+
+                    <!-- 3. Air Quality Index (AQI) -->
+                    <div class="glass-card metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title"><i data-lucide="leaf"></i> Kualitas Udara (AQI)</span>
+                            <span class="aqi-badge-status" id="aqi-badge">Memuat...</span>
+                        </div>
+                        <div class="metric-body">
+                            <div class="metric-val-group">
+                                <span class="metric-main-value" id="aqi-score">--</span>
+                                <span class="metric-sub-unit">/ 5</span>
+                            </div>
+                            <div class="aqi-meter">
+                                <div class="aqi-step" data-level="1"></div>
+                                <div class="aqi-step" data-level="2"></div>
+                                <div class="aqi-step" data-level="3"></div>
+                                <div class="aqi-step" data-level="4"></div>
+                                <div class="aqi-step" data-level="5"></div>
+                                <div class="aqi-indicator" id="aqi-indicator"></div>
+                            </div>
+                            <div class="aqi-pollutants" id="aqi-pollutants">
+                                <span>PM2.5: <b id="pm25-val">--</b></span>
+                                <span>PM10: <b id="pm10-val">--</b></span>
+                                <span>O₃: <b id="o3-val">--</b></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Sun Cycle (Sunrise & Sunset) -->
+                    <div class="glass-card metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title"><i data-lucide="sun"></i> Siklus Surya</span>
+                            <span class="metric-badge" id="daylight-badge">Siang Hari</span>
+                        </div>
+                        <div class="metric-body sun-cycle-body">
+                            <div class="sun-arc-wrap">
+                                <svg class="sun-arc-svg" viewBox="0 0 160 80">
+                                    <path d="M 10 75 A 70 70 0 0 1 150 75" class="arc-bg" />
+                                    <path d="M 10 75 A 70 70 0 0 1 150 75" class="arc-progress" id="sun-arc-path" />
+                                    <circle cx="10" cy="75" r="6" class="sun-dot" id="sun-dot" />
+                                </svg>
+                            </div>
+                            <div class="sun-times-row">
+                                <div class="sun-time-box">
+                                    <i data-lucide="sunrise"></i>
+                                    <div>
+                                        <span class="sun-sub">Terbit</span>
+                                        <span class="sun-val" id="sunrise-time">--:--</span>
+                                    </div>
+                                </div>
+                                <div class="sun-time-box">
+                                    <i data-lucide="sunset"></i>
+                                    <div>
+                                        <span class="sun-sub">Terbenam</span>
+                                        <span class="sun-val" id="sunset-time">--:--</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. Visibility -->
+                    <div class="glass-card metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title"><i data-lucide="eye"></i> Jarak Pandang</span>
+                            <span class="metric-badge" id="visibility-badge">Jernih</span>
+                        </div>
+                        <div class="metric-body">
+                            <div class="metric-val-group">
+                                <span class="metric-main-value" id="visibility-val">--</span>
+                                <span class="metric-sub-unit" id="visibility-unit">km</span>
+                            </div>
+                            <p class="metric-subtext" id="visibility-desc">Jarak pandang sangat jelas.</p>
+                        </div>
+                    </div>
+
+                    <!-- 6. Atmospheric Pressure -->
+                    <div class="glass-card metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title"><i data-lucide="gauge"></i> Tekanan Udara</span>
+                            <span class="metric-badge" id="pressure-badge">Stabil</span>
+                        </div>
+                        <div class="metric-body">
+                            <div class="metric-val-group">
+                                <span class="metric-main-value" id="pressure-val">--</span>
+                                <span class="metric-sub-unit">hPa</span>
+                            </div>
+                            <p class="metric-subtext" id="pressure-desc">Tekanan atmosfer standar laut.</p>
+                        </div>
+                    </div>
+
+                    <!-- 7. Cloud Cover -->
+                    <div class="glass-card metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title"><i data-lucide="cloud"></i> Tutupan Awan</span>
+                            <span class="metric-badge" id="cloud-badge">Sebagian</span>
+                        </div>
+                        <div class="metric-body">
+                            <div class="metric-val-group">
+                                <span class="metric-main-value" id="cloud-val">--</span>
+                                <span class="metric-sub-unit">%</span>
+                            </div>
+                            <div class="progress-bar-wrap">
+                                <div class="progress-bar-fill cloud-fill" id="cloud-progress" style="width: 0%;"></div>
+                            </div>
+                            <p class="metric-subtext" id="cloud-desc">Langit cerah berawan tipis.</p>
+                        </div>
+                    </div>
+
+                    <!-- 8. Rain Chance (POP) -->
+                    <div class="glass-card metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title"><i data-lucide="cloud-rain"></i> Peluang Hujan</span>
+                            <span class="metric-badge" id="rain-chance-badge">Rendah</span>
+                        </div>
+                        <div class="metric-body">
+                            <div class="metric-val-group">
+                                <span class="metric-main-value" id="rain-chance-val">0</span>
+                                <span class="metric-sub-unit">%</span>
+                            </div>
+                            <div class="progress-bar-wrap">
+                                <div class="progress-bar-fill rain-fill" id="rain-progress" style="width: 0%;"></div>
+                            </div>
+                            <p class="metric-subtext" id="rain-chance-desc">Kemungkinan presipitasi rendah.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bottom Full-Width Section: 5-Day Extended Forecast -->
+            <section class="section-forecast-5day">
+                <div class="glass-card forecast-5day-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i data-lucide="calendar"></i>
+                            <h3>Prakiraan Cuaca 5 Hari ke Depan</h3>
+                            <span class="badge-sub">Analisis Suhu & Presipitasi Mingguan</span>
+                        </div>
+                    </div>
+
+                    <div class="forecast-list" id="forecast-5day-list">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Toast Notifications Container -->
+        <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>&copy; 2026 Aether Weather &bull; Data cuaca real-time akurat didukung oleh OpenWeatherMap</p>
+        </footer>
+    </div>
+
+    <!-- Application Script -->
+    <script src="script.js"></script>
+</body>
+</html>

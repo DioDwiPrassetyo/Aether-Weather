@@ -1,0 +1,40 @@
+{
+  "name": "aether-weather",
+  "version": "1.0.0",
+  "description": "Modern Real-Time Weather Intelligence & Live Radar built with Next.js App Router, React 19, TypeScript, and Vanilla CSS",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "keywords": [
+    "weather",
+    "weather-app",
+    "nextjs",
+    "react19",
+    "typescript",
+    "radar",
+    "rainviewer",
+    "glassmorphism",
+    "leaflet",
+    "openstreetmap"
+  ],
+  "author": "AetherWeather",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@types/leaflet": "^1.9.22",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^1.60.0",
+    "next": "^16.4.2",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^7.0.2"
+  }
+}
