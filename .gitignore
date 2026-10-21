@@ -39,3 +39,6 @@ ehthumbs.db
 !.vscode/settings.json
 !.vscode/extensions.json
 .idea/
+*.tsbuildinfo
+
+

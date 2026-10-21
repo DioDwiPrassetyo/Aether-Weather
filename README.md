@@ -47,6 +47,35 @@ Dibuat dengan arsitektur ganda: **Next.js 16 App Router (React 19 + TypeScript)*
   6. **Tekanan Udara (Pressure)**: Pengukuran hPa dengan status stabilitas barometrik.
   7. **Tutupan Awan (Cloud Cover)**: Persentase kepekatan awan di langit.
   8. **Peluang Hujan (Rain Chance / POP)**: Persentase probabilitas presipitasi.
+  9. **Fase Bulan & Astronomi**: Visualisasi piringan bulan dinamis (New Moon s.d. Full Moon), umur bulan dalam hari, persentase iluminasi, serta pelacak waktu *Golden Hour* & *Blue Hour* untuk fotografi.
+
+- 🌓 **Astronomi & Golden Hour Tracker**:
+  - Algoritma perhitungan fase bulan astronomis (umur bulan, iluminasi, bayangan terminator dinamis SVG).
+  - Jadwal *Golden Hour Pagi*, *Golden Hour Sore*, dan *Blue Hour* dengan indikator status aktif real-time.
+
+- 📲 **Progressive Web App (PWA) & Offline Mode**:
+  - Dilengkapi `manifest.json`, icon maskable, dan Service Worker (`sw.js`).
+  - Dapat diinstal langsung ke Homescreen Smartphone (Android/iOS) atau Desktop layaknya aplikasi native.
+  - Caching otomatis di `localStorage`: jika internet terputus atau mode pesawat aktif, aplikasi otomatis beralih ke *Mode Offline* dan menampilkan snapshot cuaca terakhir tanpa error.
+
+- ⚖️ **Perbandingan Cuaca Multi-Kota (City Comparison Tool)**:
+  - Bandingkan 2 kota berdampingan (*side-by-side*) secara instan dengan pencarian autocomplete atau preset kota global (Tokyo, Singapore, London, New York, dll.).
+  - Analisis selisih temperatur (°C), selisih zona waktu, perbandingan kualitas udara (AQI), kelembapan, dan arah angin.
+
+- 🌐 **Dukungan Multi-Bahasa (Bilingual: ID 🇮🇩 ⟷ EN 🇬🇧)**:
+  - Pengalih bahasa instan di header navigasi. Seluruh antarmuka, deskripsi cuaca, kalender, advisor aktivitas, hingga modal diterjemahkan secara otomatis.
+
+- 📸 **Bagikan Kartu Cuaca (Weather Snapshot & Social Share)**:
+  - Generator grafis kartu cuaca high-res (2x Retina) berbasis HTML5 Canvas.
+  - Unduh langsung sebagai gambar PNG untuk status/cerita atau bagikan langsung via Web Share API ke WhatsApp, Instagram, Telegram, dan Twitter.
+  - Salin ringkasan teks cuaca ke clipboard dengan satu klik.
+
+- 🕒 **Riwayat Pencarian Terakhir (Recent Searches)**:
+  - Menyimpan otomatis kota-kota yang baru saja dicari.
+  - Muncul dalam dropdown saat input pencarian difokuskan untuk navigasi cepat, lengkap dengan tombol hapus riwayat.
+
+- 🔍 **Prakiraan Per Jam Interaktif (Interactive Hourly Breakdown)**:
+  - Setiap kapsul jam dapat diklik untuk membuka modal rincian atmosfer spesifik jam tersebut (kecepatan hembusan angin, tekanan udara, kelembapan, titik embun, dan tutupan awan) dengan tombol navigasi jam berikutnya/sebelumnya.
 
 - 🧠 **Smart Weather Advisor & Hazard Alerts**:
   - Rekomendasi busana, aktivitas luar ruangan, kondisi berkendara, dan perlindungan UV.
@@ -88,13 +117,18 @@ Weather App/
 │   │   ├── layout.tsx          # Root layout & Next.js Viewport metadata
 │   │   └── page.tsx            # Halaman utama cuaca
 │   ├── components/             # Komponen React modular
+│   │   ├── AstronomyCard.tsx   # Visualisasi siklus bulan & Golden Hour
+│   │   ├── CityComparisonModal.tsx # Modal komparasi cuaca 2 kota
 │   │   ├── ExtremeWeatherAlert.tsx
 │   │   ├── FiveDayForecast.tsx
-│   │   ├── Header.tsx
-│   │   ├── HeroCard.tsx
-│   │   ├── HourlyForecast.tsx
-│   │   ├── MetricCards.tsx
+│   │   ├── Header.tsx          # Pencarian, riwayat recent, & bilingual toggle
+│   │   ├── HeroCard.tsx        # Cuaca utama, jam lokal, offline badge, share
+│   │   ├── HourlyDetailModal.tsx   # Modal rincian atmosfer per jam
+│   │   ├── HourlyForecast.tsx  # Kapsul cuaca 24 jam interaktif
+│   │   ├── MetricCards.tsx     # 8 Highlight metrik + Kartu astronomi
+│   │   ├── PwaRegister.tsx     # Registrasi Service Worker PWA
 │   │   ├── QuickChips.tsx
+│   │   ├── ShareWeatherModal.tsx   # Generator kartu cuaca Canvas PNG & Web Share
 │   │   ├── Toast.tsx
 │   │   ├── WeatherAdvisor.tsx
 │   │   ├── WeatherCanvas.tsx
@@ -104,7 +138,9 @@ Weather App/
 │   ├── types/
 │   │   └── weather.ts          # Definisi TypeScript OpenWeatherMap & state
 │   └── utils/
-│       └── weatherUtils.ts     # Fetcher API, geocoding, & translasi i18n
+│       ├── astronomyUtils.ts   # Kalkulator fase bulan & waktu fotografi
+│       ├── i18n.ts             # Kamus terjemahan bilingual ID & EN
+│       └── weatherUtils.ts     # Fetcher API, geocoding, & translasi cuaca
 ├── .env.example                # Panduan konfigurasi environment variables
 ├── .gitignore                  # File pengabaian git (node_modules, .next, dll)
 ├── LICENSE                     # Lisensi MIT

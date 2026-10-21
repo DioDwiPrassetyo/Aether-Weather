@@ -3,12 +3,14 @@
 import React from 'react';
 import { Flame, Star, X } from 'lucide-react';
 import { FavoriteLocation } from '@/types/weather';
+import { Language, getTranslation } from '@/utils/i18n';
 
 interface QuickChipsProps {
   currentCity: string;
   onSelectCity: (city: string) => void;
   favorites: FavoriteLocation[];
   onRemoveFavorite: (city: string) => void;
+  lang?: Language;
 }
 
 const POPULAR_CITIES = [
@@ -27,12 +29,15 @@ export const QuickChips: React.FC<QuickChipsProps> = ({
   onSelectCity,
   favorites,
   onRemoveFavorite,
+  lang = 'id',
 }) => {
+  const t = getTranslation(lang);
+
   return (
     <div className="quick-bar">
       <div className="quick-chips-wrapper">
         <span className="quick-label">
-          <Flame size={14} color="#f59e0b" /> Populer:
+          <Flame size={14} color="#f59e0b" /> {t.popularCities}:
         </span>
         <div className="chips-list">
           {POPULAR_CITIES.map((city) => (
@@ -50,7 +55,7 @@ export const QuickChips: React.FC<QuickChipsProps> = ({
       {favorites.length > 0 && (
         <div className="favorites-wrapper">
           <span className="quick-label">
-            <Star size={14} color="#facc15" /> Favorit:
+            <Star size={14} color="#facc15" /> {t.savedFavorites}:
           </span>
           <div className="chips-list">
             {favorites.map((fav) => (

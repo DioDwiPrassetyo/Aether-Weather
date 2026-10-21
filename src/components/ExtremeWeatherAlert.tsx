@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import {
-  AlertTriangle,
   Flame,
   CloudLightning,
   CloudRain,
@@ -18,12 +17,14 @@ import {
   ForecastResponse,
   UnitType,
 } from '@/types/weather';
+import { Language, getTranslation } from '@/utils/i18n';
 
 interface ExtremeWeatherAlertProps {
   current: CurrentWeatherResponse;
   pollution: AirPollutionResponse | null;
   forecast: ForecastResponse | null;
   unit: UnitType;
+  lang?: Language;
 }
 
 interface AlertDetail {
@@ -39,7 +40,9 @@ export const ExtremeWeatherAlert: React.FC<ExtremeWeatherAlertProps> = ({
   pollution,
   forecast,
   unit,
+  lang = 'id',
 }) => {
+  const t = getTranslation(lang);
   const [dismissed, setDismissed] = useState<string[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -61,9 +64,11 @@ export const ExtremeWeatherAlert: React.FC<ExtremeWeatherAlertProps> = ({
     alerts.push({
       id: 'thunderstorm',
       type: 'danger',
-      title: 'Peringatan Badai Petir (Thunderstorm)',
+      title: lang === 'id' ? 'Peringatan Badai Petir (Thunderstorm)' : 'Severe Thunderstorm Warning',
       message:
-        'Aktivitas petir dan kilat terdeteksi di sekitar area. Hindari berada di lapangan terbuka dan jauhi pohon tinggi.',
+        lang === 'id'
+          ? 'Aktivitas petir dan kilat terdeteksi di sekitar area. Hindari berada di lapangan terbuka dan jauhi pohon tinggi.'
+          : 'Lightning and storm activity detected in your area. Seek shelter indoors and avoid tall trees or open fields.',
       icon: <CloudLightning size={20} color="#facc15" />,
     });
   }
@@ -74,8 +79,11 @@ export const ExtremeWeatherAlert: React.FC<ExtremeWeatherAlertProps> = ({
     alerts.push({
       id: 'heavy-rain',
       type: 'warning',
-      title: 'Potensi Hujan Deras / Genangan Air',
-      message: `Peluang presipitasi tinggi (${nextPoP}%). Waspadai genangan air di jalan raya dan siapkan payung atau jas hujan.`,
+      title: lang === 'id' ? 'Potensi Hujan Deras / Genangan Air' : 'Heavy Rainfall & Flooding Risk',
+      message:
+        lang === 'id'
+          ? `Peluang presipitasi tinggi (${nextPoP}%). Waspadai genangan air di jalan raya dan siapkan payung atau jas hujan.`
+          : `High precipitation probability (${nextPoP}%). Watch for road puddles and keep rain gear prepared.`,
       icon: <CloudRain size={20} color="#38bdf8" />,
     });
   }
@@ -85,8 +93,11 @@ export const ExtremeWeatherAlert: React.FC<ExtremeWeatherAlertProps> = ({
     alerts.push({
       id: 'extreme-heat',
       type: 'danger',
-      title: 'Peringatan Panas Ekstrem',
-      message: `Suhu terasa sangat menyengat (${Math.round(current.main.feels_like)}°). Cegah dehidrasi dengan minum air putih lebih sering dan batasi paparan terik matahari langsung.`,
+      title: lang === 'id' ? 'Peringatan Panas Ekstrem' : 'Extreme Heat Advisory',
+      message:
+        lang === 'id'
+          ? `Suhu terasa sangat menyengat (${Math.round(current.main.feels_like)}°). Cegah dehidrasi dengan minum air putih lebih sering dan batasi paparan terik matahari langsung.`
+          : `Feels like ${Math.round(current.main.feels_like)}°. Stay hydrated, drink water frequently, and limit direct sun exposure.`,
       icon: <Flame size={20} color="#f87171" />,
     });
   }
@@ -97,8 +108,11 @@ export const ExtremeWeatherAlert: React.FC<ExtremeWeatherAlertProps> = ({
     alerts.push({
       id: 'high-wind',
       type: 'warning',
-      title: 'Peringatan Angin Kencang',
-      message: `Kecepatan hembusan angin mencapai ${Math.round(speedKmh)} km/j. Hati-hati terhadap pohon rawan tumbang dan papan reklame.`,
+      title: lang === 'id' ? 'Peringatan Angin Kencang' : 'High Wind Warning',
+      message:
+        lang === 'id'
+          ? `Kecepatan hembusan angin mencapai ${Math.round(speedKmh)} km/j. Hati-hati terhadap pohon rawan tumbang dan papan reklame.`
+          : `Wind gusts reach ${Math.round(speedKmh)} km/h. Be cautious of falling branches, banners, and unsecured objects.`,
       icon: <Wind size={20} color="#60a5fa" />,
     });
   }
@@ -109,9 +123,11 @@ export const ExtremeWeatherAlert: React.FC<ExtremeWeatherAlertProps> = ({
     alerts.push({
       id: 'hazardous-aqi',
       type: 'danger',
-      title: 'Kualitas Udara Buruk / Tidak Sehat',
+      title: lang === 'id' ? 'Kualitas Udara Buruk / Tidak Sehat' : 'Unhealthy Air Quality (AQI)',
       message:
-        'Indeks pencemaran udara tinggi (PM2.5 meningkat). Kelompok sensitif disarankan mengenakan masker medis jika beraktivitas di luar.',
+        lang === 'id'
+          ? 'Indeks pencemaran udara tinggi (PM2.5 meningkat). Kelompok sensitif disarankan mengenakan masker medis jika beraktivitas di luar.'
+          : 'High particulate concentration (elevated PM2.5). Sensitive groups and outdoor exercisers should wear masks.',
       icon: <ShieldAlert size={20} color="#c084fc" />,
     });
   }
@@ -121,8 +137,11 @@ export const ExtremeWeatherAlert: React.FC<ExtremeWeatherAlertProps> = ({
     alerts.push({
       id: 'low-visibility',
       type: 'warning',
-      title: 'Jarak Pandang Terbatas (Kabut Tebal)',
-      message: `Jarak pandang hanya ${(current.visibility / 1000).toFixed(1)} km. Nyalakan lampu kabut kendaraan Anda dan jaga jarak aman saat berkendara.`,
+      title: lang === 'id' ? 'Jarak Pandang Terbatas (Kabut Tebal)' : 'Low Visibility Advisory (Fog)',
+      message:
+        lang === 'id'
+          ? `Jarak pandang hanya ${(current.visibility / 1000).toFixed(1)} km. Nyalakan lampu kabut kendaraan Anda dan jaga jarak aman saat berkendara.`
+          : `Visibility reduced to ${(current.visibility / 1000).toFixed(1)} km. Turn on low beams or fog lights and maintain safe driving distances.`,
       icon: <Eye size={20} color="#cbd5e1" />,
     });
   }
@@ -141,7 +160,7 @@ export const ExtremeWeatherAlert: React.FC<ExtremeWeatherAlertProps> = ({
             <span className="alert-title">{topAlert.title}</span>
             {activeAlerts.length > 1 && (
               <span className="alert-badge-count">
-                +{activeAlerts.length - 1} peringatan lainnya
+                +{activeAlerts.length - 1} {lang === 'id' ? 'peringatan lainnya' : 'more alerts'}
               </span>
             )}
           </div>
@@ -169,7 +188,7 @@ export const ExtremeWeatherAlert: React.FC<ExtremeWeatherAlertProps> = ({
             className="alert-btn-toggle"
             onClick={() => setIsExpanded(!isExpanded)}
           >
-            {isExpanded ? 'Tutup Detail' : 'Lihat Semua'}
+            {isExpanded ? (lang === 'id' ? 'Tutup Detail' : 'Collapse') : (lang === 'id' ? 'Lihat Semua' : 'View All')}
             <ChevronRight
               size={14}
               style={{
@@ -182,7 +201,7 @@ export const ExtremeWeatherAlert: React.FC<ExtremeWeatherAlertProps> = ({
         <button
           className="alert-btn-dismiss"
           onClick={() => setDismissed((prev) => [...prev, topAlert.id])}
-          title="Tutup Peringatan"
+          title={lang === 'id' ? 'Tutup Peringatan' : 'Dismiss Alert'}
         >
           <X size={16} />
         </button>

@@ -3,14 +3,17 @@
 import React from 'react';
 import { Calendar, Droplet } from 'lucide-react';
 import { ForecastItem } from '@/types/weather';
-import { I18N } from '@/utils/weatherUtils';
+import { Language, getTranslation } from '@/utils/i18n';
 import { MiniWeatherIcon } from './WeatherIcons';
 
 interface FiveDayForecastProps {
   items: ForecastItem[];
+  lang?: Language;
 }
 
-export const FiveDayForecast: React.FC<FiveDayForecastProps> = ({ items }) => {
+export const FiveDayForecast: React.FC<FiveDayForecastProps> = ({ items, lang = 'id' }) => {
+  const t = getTranslation(lang);
+
   // Group by date
   const dailyGroups: Record<string, ForecastItem[]> = {};
   items.forEach((item) => {
@@ -57,8 +60,15 @@ export const FiveDayForecast: React.FC<FiveDayForecastProps> = ({ items }) => {
     if (max > weekMax) weekMax = max;
 
     const dateObj = new Date(dateStr + 'T00:00:00');
-    const dayLabel = idx === 0 ? 'Hari Ini' : idx === 1 ? 'Besok' : I18N.days[dateObj.getDay()];
-    const dateFormatted = `${dateObj.getDate()} ${I18N.months[dateObj.getMonth()]}`;
+    const dayLabel =
+      idx === 0
+        ? t.today
+        : idx === 1
+        ? lang === 'id'
+          ? 'Besok'
+          : 'Tomorrow'
+        : t.days[dateObj.getDay()];
+    const dateFormatted = `${dateObj.getDate()} ${t.months[dateObj.getMonth()]}`;
 
     return {
       dayLabel,
@@ -78,8 +88,8 @@ export const FiveDayForecast: React.FC<FiveDayForecastProps> = ({ items }) => {
         <div className="card-header">
           <div className="card-title">
             <Calendar size={20} color="#38bdf8" />
-            <h3>Prakiraan Cuaca 5 Hari ke Depan</h3>
-            <span className="badge-sub">Analisis Suhu & Presipitasi Mingguan</span>
+            <h3>{t.extendedForecastTitle}</h3>
+            <span className="badge-sub">{lang === 'id' ? 'Analisis Suhu & Presipitasi Mingguan' : 'Weekly Temperature & Precipitation'}</span>
           </div>
         </div>
 
@@ -87,6 +97,9 @@ export const FiveDayForecast: React.FC<FiveDayForecastProps> = ({ items }) => {
           {processedDays.map((day, idx) => {
             const leftPercent = Math.max(0, ((day.min - weekMin) / tempRangeSpan) * 100);
             const widthPercent = Math.max(8, ((day.max - day.min) / tempRangeSpan) * 100);
+            const translatedDesc =
+              t.descriptions[day.weather.description.toLowerCase()] || day.weather.description;
+
             return (
               <div key={idx} className="forecast-row">
                 <div className="row-col-day">
@@ -97,7 +110,7 @@ export const FiveDayForecast: React.FC<FiveDayForecastProps> = ({ items }) => {
                   <MiniWeatherIcon weatherId={day.weather.id} isNight={false} size={28} />
                 </div>
                 <div className="row-desc">
-                  {I18N.translate(day.weather.description)}
+                  {translatedDesc}
                   {day.pop > 15 && (
                     <span className="row-pop-badge">
                       <Droplet size={11} />

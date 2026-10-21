@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Outfit, Plus_Jakarta_Sans } from 'next/font/google';
+import { PwaRegister } from '@/components/PwaRegister';
 import './globals.css';
 
 const outfit = Outfit({
@@ -17,7 +18,12 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: 'Aether Weather — Dashboard Cuaca Modern Next.js',
   description:
-    'Aplikasi cuaca modern dengan Next.js App Router, real-time forecast, prakiraan per jam, 5 hari ke depan, indeks kualitas udara (AQI), dan radar dinamis.',
+    'Aplikasi cuaca modern dengan Next.js App Router, real-time forecast, prakiraan per jam, 5 hari ke depan, indeks kualitas udara (AQI), astronomi fase bulan, dan radar dinamis.',
+  manifest: '/manifest.json',
+  icons: {
+    icon: '/icon.svg',
+    apple: '/icon.svg',
+  },
 };
 
 export const viewport: Viewport = {
@@ -35,7 +41,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id" className={`${outfit.variable} ${plusJakartaSans.variable}`}>
-      <body>{children}</body>
+      <body>
+        <PwaRegister />
+        {children}
+      </body>
     </html>
   );
 }

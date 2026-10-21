@@ -1,16 +1,25 @@
 'use client';
 
 import React from 'react';
-import { Clock3, MoveHorizontal, Droplet } from 'lucide-react';
+import { Clock3, MoveHorizontal, Droplet, Sparkles } from 'lucide-react';
 import { ForecastItem } from '@/types/weather';
+import { Language, getTranslation } from '@/utils/i18n';
 import { MiniWeatherIcon } from './WeatherIcons';
 
 interface HourlyForecastProps {
   items: ForecastItem[];
   timezoneOffset: number;
+  onSelectHour?: (index: number) => void;
+  lang?: Language;
 }
 
-export const HourlyForecast: React.FC<HourlyForecastProps> = ({ items, timezoneOffset }) => {
+export const HourlyForecast: React.FC<HourlyForecastProps> = ({
+  items,
+  timezoneOffset,
+  onSelectHour,
+  lang = 'id',
+}) => {
+  const t = getTranslation(lang);
   const displayItems = items.slice(0, 10);
 
   return (
@@ -18,11 +27,11 @@ export const HourlyForecast: React.FC<HourlyForecastProps> = ({ items, timezoneO
       <div className="card-header">
         <div className="card-title">
           <Clock3 size={20} color="#38bdf8" />
-          <h3>Prakiraan Tiap Jam</h3>
-          <span className="badge-sub">24 Jam ke Depan</span>
+          <h3>{t.hourlyTitle}</h3>
+          <span className="badge-sub">{t.hourlySubtitle}</span>
         </div>
-        <span className="scroll-hint">
-          <MoveHorizontal size={14} /> Geser
+        <span className="scroll-hint" title={t.clickForDetails}>
+          <MoveHorizontal size={14} /> {lang === 'id' ? 'Geser & Klik' : 'Scroll & Click'}
         </span>
       </div>
 
@@ -30,7 +39,7 @@ export const HourlyForecast: React.FC<HourlyForecastProps> = ({ items, timezoneO
         {displayItems.map((item, index) => {
           const date = new Date((item.dt + timezoneOffset) * 1000);
           const hour = date.getUTCHours();
-          const timeLabel = index === 0 ? 'Sekarang' : `${String(hour).padStart(2, '0')}:00`;
+          const timeLabel = index === 0 ? t.now : `${String(hour).padStart(2, '0')}:00`;
           const temp = Math.round(item.main.temp);
           const weather = item.weather[0];
           const isNight = weather.icon.endsWith('n');
@@ -39,7 +48,17 @@ export const HourlyForecast: React.FC<HourlyForecastProps> = ({ items, timezoneO
           return (
             <div
               key={item.dt}
-              className={`hourly-capsule ${index === 0 ? 'active-now' : ''}`}
+              className={`hourly-capsule ${index === 0 ? 'active-now' : ''} clickable-capsule`}
+              onClick={() => onSelectHour && onSelectHour(index)}
+              title={`${t.clickForDetails} (${timeLabel})`}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onSelectHour && onSelectHour(index);
+                }
+              }}
             >
               <span className="hourly-time">{timeLabel}</span>
               <div className="hourly-icon-wrap">

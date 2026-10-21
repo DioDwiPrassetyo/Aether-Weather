@@ -756,12 +756,14 @@
         DOM.sunsetTime.textContent = formatTime(sunsetTimestamp);
 
         // Calculate current progress along arc
-        const nowUtcSec = Math.floor((Date.now() + (new Date().getTimezoneOffset() * 60000)) / 1000) + timezoneOffset;
-        const totalDaySec = sunsetTimestamp - sunriseTimestamp;
-        const elapsedDaySec = nowUtcSec - (sunriseTimestamp + timezoneOffset);
+        const currentUtc = Math.floor(Date.now() / 1000);
+        const iconStr = data.weather[0]?.icon || '';
+        const isNight = iconStr.endsWith('n');
+        const isDaytime = isNight ? false : iconStr.endsWith('d') ? true : (currentUtc >= sunriseTimestamp && currentUtc < sunsetTimestamp);
 
-        const progress = Math.max(0, Math.min(1, elapsedDaySec / totalDaySec));
-        const isDaytime = nowUtcSec >= (sunriseTimestamp + timezoneOffset) && nowUtcSec <= (sunsetTimestamp + timezoneOffset);
+        const totalDaySec = Math.max(1, sunsetTimestamp - sunriseTimestamp);
+        const elapsedDaySec = currentUtc - sunriseTimestamp;
+        const progress = isDaytime ? Math.max(0, Math.min(1, elapsedDaySec / totalDaySec)) : (currentUtc >= sunsetTimestamp ? 1 : 0);
 
         DOM.daylightBadge.textContent = isDaytime ? 'Siang Hari' : 'Malam Hari';
 

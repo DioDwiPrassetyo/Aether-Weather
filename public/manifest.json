@@ -1,0 +1,40 @@
+{
+  "name": "Aether Weather — Intelligence & Live Radar",
+  "short_name": "AetherWeather",
+  "description": "Modern Real-Time Weather Intelligence, Astronomy & Live Radar with Next.js",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#070b14",
+  "theme_color": "#0284c7",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["weather", "utilities", "lifestyle"],
+  "shortcuts": [
+    {
+      "name": "Live Radar",
+      "url": "/#weather-dashboard",
+      "description": "Buka Peta Doppler Radar Cuaca"
+    }
+  ]
+}

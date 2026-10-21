@@ -19,6 +19,7 @@ import {
   ForecastResponse,
   UnitType,
 } from '@/types/weather';
+import { Language, getTranslation } from '@/utils/i18n';
 import { getCardinalDirection, getBeaufortScale } from '@/utils/weatherUtils';
 
 interface MetricCardsProps {
@@ -26,6 +27,7 @@ interface MetricCardsProps {
   pollution: AirPollutionResponse | null;
   forecast: ForecastResponse | null;
   unit: UnitType;
+  lang?: Language;
 }
 
 export const MetricCards: React.FC<MetricCardsProps> = ({
@@ -33,7 +35,9 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
   pollution,
   forecast,
   unit,
+  lang = 'id',
 }) => {
+  const t = getTranslation(lang);
   const speedUnit = unit === 'metric' ? 'km/j' : 'mph';
   const windDisplay =
     unit === 'metric' ? Math.round(current.wind.speed * 3.6) : Math.round(current.wind.speed);
@@ -50,14 +54,15 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
   // AQI calculations
   const aqiItem = pollution?.list?.[0];
   const aqiScore = aqiItem?.main?.aqi ?? 0;
-  const aqiConfig: Record<number, { label: string; className: string }> = {
-    1: { label: 'Sangat Baik', className: 'aqi-good' },
-    2: { label: 'Baik / Fair', className: 'aqi-fair' },
-    3: { label: 'Sedang', className: 'aqi-moderate' },
-    4: { label: 'Buruk', className: 'aqi-poor' },
-    5: { label: 'Sangat Buruk', className: 'aqi-very-poor' },
+  const aqiClassMap: Record<number, string> = {
+    1: 'aqi-good',
+    2: 'aqi-fair',
+    3: 'aqi-moderate',
+    4: 'aqi-poor',
+    5: 'aqi-very-poor',
   };
-  const aqiInfo = aqiConfig[aqiScore] || { label: 'Memuat...', className: '' };
+  const aqiLabel = t.aqiLevels[aqiScore] || (lang === 'id' ? 'Memuat...' : 'Loading...');
+  const aqiClassName = aqiClassMap[aqiScore] || '';
 
   // Sun Cycle calculation
   const formatTime = (ts: number, tz: number) => {
@@ -67,14 +72,23 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
   const sunriseStr = formatTime(current.sys.sunrise, current.timezone);
   const sunsetStr = formatTime(current.sys.sunset, current.timezone);
 
-  const nowSec =
-    Math.floor((Date.now() + new Date().getTimezoneOffset() * 60000) / 1000) + current.timezone;
-  const totalDaySec = current.sys.sunset - current.sys.sunrise;
-  const elapsedDaySec = nowSec - (current.sys.sunrise + current.timezone);
-  const progress = Math.max(0, Math.min(1, elapsedDaySec / totalDaySec));
-  const isDaytime =
-    nowSec >= current.sys.sunrise + current.timezone &&
-    nowSec <= current.sys.sunset + current.timezone;
+  const nowUtcSec = Math.floor(Date.now() / 1000);
+  const isNightIcon = current.weather[0]?.icon?.endsWith('n');
+  const isDaytime = isNightIcon
+    ? false
+    : current.weather[0]?.icon?.endsWith('d')
+    ? true
+    : nowUtcSec >= current.sys.sunrise && nowUtcSec < current.sys.sunset;
+
+  // Progress of the sun across the daytime arc (0 at sunrise, 1 at sunset)
+  let progress = 0;
+  if (isDaytime) {
+    const totalDaySec = Math.max(1, current.sys.sunset - current.sys.sunrise);
+    const elapsedDaySec = nowUtcSec - current.sys.sunrise;
+    progress = Math.max(0, Math.min(1, elapsedDaySec / totalDaySec));
+  } else {
+    progress = nowUtcSec >= current.sys.sunset ? 1 : 0;
+  }
 
   const angle = Math.PI - progress * Math.PI;
   const dotX = (80 + 70 * Math.cos(angle)).toFixed(1);
@@ -95,7 +109,7 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
       <div className="glass-card metric-card">
         <div className="metric-header">
           <span className="metric-title">
-            <Wind size={16} color="#38bdf8" /> Angin & Arah
+            <Wind size={16} color="#38bdf8" /> {t.windAndDirection}
           </span>
           <span className="metric-badge">{getBeaufortScale(current.wind.speed)}</span>
         </div>
@@ -120,10 +134,10 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
               <span className="metric-sub-unit">{speedUnit}</span>
             </div>
             <p className="metric-note">
-              Arah: {getCardinalDirection(current.wind.deg)} ({current.wind.deg || 0}°)
+              {lang === 'id' ? 'Arah' : 'Direction'}: {getCardinalDirection(current.wind.deg)} ({current.wind.deg || 0}°)
             </p>
             <p className="metric-subtext">
-              {gustDisplay ? `Hembusan: ${gustDisplay} ${speedUnit}` : 'Hembusan stabil'}
+              {gustDisplay ? `${t.gustSpeed}: ${gustDisplay} ${speedUnit}` : (lang === 'id' ? 'Hembusan stabil' : 'Steady wind')}
             </p>
           </div>
         </div>
@@ -133,10 +147,14 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
       <div className="glass-card metric-card">
         <div className="metric-header">
           <span className="metric-title">
-            <Droplet size={16} color="#38bdf8" /> Kelembapan
+            <Droplet size={16} color="#38bdf8" /> {t.humidityAndDew}
           </span>
           <span className="metric-badge">
-            {current.main.humidity < 40 ? 'Kering' : current.main.humidity <= 65 ? 'Nyaman' : 'Lembap'}
+            {current.main.humidity < 40
+              ? t.dewComfortDry
+              : current.main.humidity <= 65
+              ? t.dewComfortNormal
+              : t.dewComfortHumid}
           </span>
         </div>
         <div className="metric-body">
@@ -151,7 +169,7 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
             ></div>
           </div>
           <p className="metric-subtext">
-            Titik Embun: {dewPoint}
+            {t.dewPoint}: {dewPoint}
             {unitSymbol}
           </p>
         </div>
@@ -161,9 +179,9 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
       <div className="glass-card metric-card">
         <div className="metric-header">
           <span className="metric-title">
-            <Leaf size={16} color="#38bdf8" /> Kualitas Udara (AQI)
+            <Leaf size={16} color="#38bdf8" /> {t.airQualityIndex}
           </span>
-          <span className={`aqi-badge-status ${aqiInfo.className}`}>{aqiInfo.label}</span>
+          <span className={`aqi-badge-status ${aqiClassName}`}>{aqiLabel}</span>
         </div>
         <div className="metric-body">
           <div className="metric-val-group">
@@ -195,9 +213,9 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
       <div className="glass-card metric-card">
         <div className="metric-header">
           <span className="metric-title">
-            <Sun size={16} color="#38bdf8" /> Siklus Surya
+            <Sun size={16} color="#38bdf8" /> {t.sunCycle}
           </span>
-          <span className="metric-badge">{isDaytime ? 'Siang Hari' : 'Malam Hari'}</span>
+          <span className="metric-badge">{isDaytime ? t.daytime : t.nighttime}</span>
         </div>
         <div className="metric-body sun-cycle-body">
           <div className="sun-arc-wrap">
@@ -217,14 +235,14 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
             <div className="sun-time-box">
               <Sunrise size={18} color="#f59e0b" />
               <div>
-                <span className="sun-sub">Terbit</span>
+                <span className="sun-sub">{t.sunrise}</span>
                 <span className="sun-val">{sunriseStr}</span>
               </div>
             </div>
             <div className="sun-time-box">
               <Sunset size={18} color="#f59e0b" />
               <div>
-                <span className="sun-sub">Terbenam</span>
+                <span className="sun-sub">{t.sunset}</span>
                 <span className="sun-val">{sunsetStr}</span>
               </div>
             </div>
@@ -236,14 +254,14 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
       <div className="glass-card metric-card">
         <div className="metric-header">
           <span className="metric-title">
-            <Eye size={16} color="#38bdf8" /> Jarak Pandang
+            <Eye size={16} color="#38bdf8" /> {t.visibility}
           </span>
           <span className="metric-badge">
             {current.visibility >= 9000
-              ? 'Sempurna'
+              ? t.visibilityClear
               : current.visibility >= 5000
-              ? 'Baik'
-              : 'Terbatas'}
+              ? t.visibilityGood
+              : t.visibilityPoor}
           </span>
         </div>
         <div className="metric-body">
@@ -253,8 +271,8 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
           </div>
           <p className="metric-subtext">
             {current.visibility >= 9000
-              ? 'Jarak pandang sangat jernih tanpa halangan.'
-              : 'Jarak pandang memadai untuk aktivitas luar.'}
+              ? (lang === 'id' ? 'Jarak pandang sangat jernih tanpa halangan.' : 'Crystal clear visibility without obstruction.')
+              : (lang === 'id' ? 'Jarak pandang memadai untuk aktivitas luar.' : 'Sufficient visibility for outdoor travel.')}
           </p>
         </div>
       </div>
@@ -263,14 +281,14 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
       <div className="glass-card metric-card">
         <div className="metric-header">
           <span className="metric-title">
-            <Gauge size={16} color="#38bdf8" /> Tekanan Udara
+            <Gauge size={16} color="#38bdf8" /> {t.airPressure}
           </span>
           <span className="metric-badge">
             {current.main.pressure > 1013
-              ? 'Tinggi'
+              ? (lang === 'id' ? 'Tinggi' : 'High')
               : current.main.pressure >= 1005
-              ? 'Normal'
-              : 'Rendah'}
+              ? (lang === 'id' ? 'Normal' : 'Normal')
+              : (lang === 'id' ? 'Rendah' : 'Low')}
           </span>
         </div>
         <div className="metric-body">
@@ -280,8 +298,10 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
           </div>
           <p className="metric-subtext">
             {current.main.pressure > 1013
-              ? 'Tekanan tinggi, cuaca cenderung cerah.'
-              : 'Tekanan atmosfer standar permukaan laut.'}
+              ? t.pressureRising
+              : current.main.pressure < 1005
+              ? t.pressureFalling
+              : t.pressureStable}
           </p>
         </div>
       </div>
@@ -290,14 +310,14 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
       <div className="glass-card metric-card">
         <div className="metric-header">
           <span className="metric-title">
-            <Cloud size={16} color="#38bdf8" /> Tutupan Awan
+            <Cloud size={16} color="#38bdf8" /> {t.cloudCover}
           </span>
           <span className="metric-badge">
             {current.clouds.all <= 20
-              ? 'Cerah'
+              ? (lang === 'id' ? 'Cerah' : 'Clear')
               : current.clouds.all <= 60
-              ? 'Sebagian'
-              : 'Rapat'}
+              ? (lang === 'id' ? 'Sebagian' : 'Scattered')
+              : (lang === 'id' ? 'Rapat' : 'Overcast')}
           </span>
         </div>
         <div className="metric-body">
@@ -311,7 +331,9 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
               style={{ width: `${current.clouds.all}%` }}
             ></div>
           </div>
-          <p className="metric-subtext">Persentase langit tertutup oleh formasi awan.</p>
+          <p className="metric-subtext">
+            {lang === 'id' ? 'Persentase langit tertutup oleh formasi awan.' : 'Cloud density covering the celestial dome.'}
+          </p>
         </div>
       </div>
 
@@ -319,10 +341,10 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
       <div className="glass-card metric-card">
         <div className="metric-header">
           <span className="metric-title">
-            <CloudRain size={16} color="#38bdf8" /> Peluang Hujan
+            <CloudRain size={16} color="#38bdf8" /> {t.precipitationChance}
           </span>
           <span className="metric-badge">
-            {nextPoP >= 60 ? 'Tinggi' : nextPoP >= 30 ? 'Sedang' : 'Rendah'}
+            {nextPoP >= 60 ? (lang === 'id' ? 'Tinggi' : 'High') : nextPoP >= 30 ? (lang === 'id' ? 'Sedang' : 'Moderate') : (lang === 'id' ? 'Rendah' : 'Low')}
           </span>
         </div>
         <div className="metric-body">
@@ -338,8 +360,8 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
           </div>
           <p className="metric-subtext">
             {nextPoP >= 60
-              ? 'Kemungkinan besar akan turun presipitasi.'
-              : 'Kemungkinan presipitasi dalam beberapa jam ke depan.'}
+              ? (lang === 'id' ? 'Kemungkinan besar akan turun presipitasi.' : 'High likelihood of impending precipitation.')
+              : (lang === 'id' ? 'Kemungkinan presipitasi dalam beberapa jam ke depan.' : 'Precipitation probability over incoming hours.')}
           </p>
         </div>
       </div>

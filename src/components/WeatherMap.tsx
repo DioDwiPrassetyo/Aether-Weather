@@ -9,8 +9,14 @@ import {
   Wind,
   RotateCw,
   Radio,
+  Play,
+  Pause,
+  Maximize2,
+  Minimize2,
+  Clock,
 } from 'lucide-react';
 import { API_KEY as DEFAULT_API_KEY } from '@/utils/weatherUtils';
+import { Language, getTranslation } from '@/utils/i18n';
 import 'leaflet/dist/leaflet.css';
 
 interface WeatherMapProps {
@@ -20,10 +26,16 @@ interface WeatherMapProps {
   currentTemp: number;
   unitSymbol: string;
   onLocationSelect: (lat: number, lon: number) => void;
+  lang?: Language;
 }
 
 type WeatherLayerType = 'rainviewer' | 'clouds' | 'temp' | 'wind';
 type BaseMapStyle = 'dark' | 'osm' | 'satellite';
+
+interface RadarFrame {
+  time: number;
+  path: string;
+}
 
 export const WeatherMap: React.FC<WeatherMapProps> = ({
   lat,
@@ -32,7 +44,9 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
   currentTemp,
   unitSymbol,
   onLocationSelect,
+  lang = 'id',
 }) => {
+  const t = getTranslation(lang);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
   const baseLayerRef = useRef<any>(null);
@@ -46,16 +60,28 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
   const [radarTimestamp, setRadarTimestamp] = useState<string>('');
   const [isLoadingRadar, setIsLoadingRadar] = useState<boolean>(false);
 
+  // Radar Animation Loop & Fullscreen State
+  const [radarFrames, setRadarFrames] = useState<RadarFrame[]>([]);
+  const [radarHost, setRadarHost] = useState<string>('https://tilecache.rainviewer.com');
+  const [currentFrameIndex, setCurrentFrameIndex] = useState<number>(0);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+
   // Fetch RainViewer radar metadata (100% Free, No API Key needed)
   const fetchRainViewerRadar = async () => {
     setIsLoadingRadar(true);
     try {
       const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
       const data = await res.json();
+      const host = data.host || 'https://tilecache.rainviewer.com';
+      setRadarHost(host);
+
       const past = data?.radar?.past || [];
       if (past.length > 0) {
-        const latest = past[past.length - 1];
-        const host = data.host || 'https://tilecache.rainviewer.com';
+        setRadarFrames(past);
+        const latestIdx = past.length - 1;
+        setCurrentFrameIndex(latestIdx);
+        const latest = past[latestIdx];
         const url = `${host}${latest.path}/256/{z}/{x}/{y}/2/1_1.png`;
         setRainViewerTileUrl(url);
 
@@ -75,6 +101,54 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
     fetchRainViewerRadar();
   }, []);
 
+  // Radar Animation Playback
+  useEffect(() => {
+    if (!isPlaying || radarFrames.length === 0 || activeWeatherLayer !== 'rainviewer') return;
+
+    const interval = setInterval(() => {
+      setCurrentFrameIndex((prev) => {
+        const next = (prev + 1) % radarFrames.length;
+        const frame = radarFrames[next];
+        const url = `${radarHost}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`;
+        setRainViewerTileUrl(url);
+
+        const d = new Date(frame.time * 1000);
+        setRadarTimestamp(
+          `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+        );
+        return next;
+      });
+    }, 750);
+
+    return () => clearInterval(interval);
+  }, [isPlaying, radarFrames, radarHost, activeWeatherLayer]);
+
+  // Handle manual frame change from slider
+  const handleFrameChange = (idx: number) => {
+    if (!radarFrames[idx]) return;
+    setCurrentFrameIndex(idx);
+    const frame = radarFrames[idx];
+    const url = `${radarHost}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`;
+    setRainViewerTileUrl(url);
+    const d = new Date(frame.time * 1000);
+    setRadarTimestamp(
+      `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+    );
+  };
+
+  // Toggle Fullscreen Mode
+  const toggleFullscreen = () => {
+    setIsFullscreen((prev) => {
+      const next = !prev;
+      setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.invalidateSize();
+        }
+      }, 200);
+      return next;
+    });
+  };
+
   // 1. Initialize Map Instance Once on Mount
   useEffect(() => {
     let isMounted = true;
@@ -90,7 +164,6 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
         (mapContainerRef.current as any)._leaflet_id = null;
       }
 
-      // OpenStreetMap with maxZoom: 18 - 100% Global Coverage, NO "Zoom Level Not Supported" tiles!
       const map = L.map(mapContainerRef.current, {
         center: [lat, lon],
         zoom: 8,
@@ -107,7 +180,6 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
 
       mapRef.current = map;
 
-      // Primary Base Layer: OpenStreetMap Humanitarian (Clean global tiles, zero watermarks, no referrer block)
       const initialUrl =
         baseMapStyle === 'satellite'
           ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
@@ -250,47 +322,45 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
   }, [activeWeatherLayer, rainViewerTileUrl]);
 
   return (
-    <div className="glass-card weather-map-card">
+    <div className={`glass-card weather-map-card ${isFullscreen ? 'map-fullscreen-mode' : ''}`}>
       <div className="card-header">
         <div className="card-title">
           <MapPin size={20} color="#38bdf8" />
           <div>
-            <h3>Peta Radar Cuaca Interaktif (Live HD Radar)</h3>
-            <span className="badge-sub">
-              Klik lokasi mana saja di peta untuk melihat cuaca real-time
-            </span>
+            <h3>{t.radarTitle}</h3>
+            <span className="badge-sub">{t.radarSubtitle}</span>
           </div>
         </div>
 
-        {/* Controls: Weather Layers & Base Map Style */}
+        {/* Controls: Weather Layers & Base Map Style & Fullscreen */}
         <div className="map-layer-switcher">
           <button
             className={`map-layer-btn ${activeWeatherLayer === 'rainviewer' ? 'active' : ''}`}
             onClick={() => setActiveWeatherLayer('rainviewer')}
-            title="Radar Hujan Satelit Real-Time (Aktif & Bebas API Key)"
+            title="Radar Hujan Satelit Real-Time"
           >
-            <CloudRain size={14} /> Radar Hujan Live
+            <CloudRain size={14} /> Radar Hujan
           </button>
           <button
             className={`map-layer-btn ${activeWeatherLayer === 'clouds' ? 'active' : ''}`}
             onClick={() => setActiveWeatherLayer('clouds')}
             title="Radar Tutupan Awan"
           >
-            <Cloud size={14} /> Awan
+            <Cloud size={14} /> {lang === 'id' ? 'Awan' : 'Clouds'}
           </button>
           <button
             className={`map-layer-btn ${activeWeatherLayer === 'temp' ? 'active' : ''}`}
             onClick={() => setActiveWeatherLayer('temp')}
             title="Heatmap Suhu Permukaan"
           >
-            <Thermometer size={14} /> Suhu
+            <Thermometer size={14} /> {lang === 'id' ? 'Suhu' : 'Temp'}
           </button>
           <button
             className={`map-layer-btn ${activeWeatherLayer === 'wind' ? 'active' : ''}`}
             onClick={() => setActiveWeatherLayer('wind')}
             title="Peta Kecepatan Angin"
           >
-            <Wind size={14} /> Angin
+            <Wind size={14} /> {lang === 'id' ? 'Angin' : 'Wind'}
           </button>
 
           {/* Base Map Style Group */}
@@ -300,7 +370,7 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
               onClick={() => setBaseMapStyle('dark')}
               title="Gaya Peta Gelap Modern"
             >
-              🌙 Gelap
+              🌙 {lang === 'id' ? 'Gelap' : 'Dark'}
             </button>
             <button
               className={`map-layer-btn ${baseMapStyle === 'satellite' ? 'active' : ''}`}
@@ -312,17 +382,28 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
             <button
               className={`map-layer-btn ${baseMapStyle === 'osm' ? 'active' : ''}`}
               onClick={() => setBaseMapStyle('osm')}
-              title="Gaya Peta Jalanan Berwarna (OpenStreetMap)"
+              title="Gaya Peta Jalanan Berwarna"
             >
-              🗺️ Jalan
+              🗺️ {lang === 'id' ? 'Jalan' : 'Street'}
             </button>
           </div>
 
+          {/* Live Indicator */}
           <div className="map-status-pill" title="Koneksi Satelit Radar Aktif">
             <Radio size={12} color="#4ade80" className="radar-live-pulse" />
             <span>Live {radarTimestamp && `(${radarTimestamp})`}</span>
           </div>
 
+          {/* Fullscreen Toggle */}
+          <button
+            className="map-layer-btn fullscreen-btn"
+            onClick={toggleFullscreen}
+            title={isFullscreen ? t.radarExitFullscreen : t.radarFullscreen}
+          >
+            {isFullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+          </button>
+
+          {/* Refresh Button */}
           <button
             className="map-layer-btn"
             onClick={fetchRainViewerRadar}
@@ -332,6 +413,38 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Radar Timeline Player Bar (Active when RainViewer layer is selected) */}
+      {activeWeatherLayer === 'rainviewer' && radarFrames.length > 0 && (
+        <div className="radar-playback-bar">
+          <button
+            className={`radar-play-btn ${isPlaying ? 'playing' : ''}`}
+            onClick={() => setIsPlaying(!isPlaying)}
+            title={isPlaying ? t.radarPause : t.radarPlay}
+          >
+            {isPlaying ? <Pause size={14} /> : <Play size={14} />}
+            <span>{isPlaying ? t.radarPause : t.radarPlay}</span>
+          </button>
+
+          <div className="radar-slider-container">
+            <span className="timeline-label">
+              <Clock size={12} /> {radarTimestamp}
+            </span>
+            <input
+              type="range"
+              min="0"
+              max={radarFrames.length - 1}
+              value={currentFrameIndex}
+              onChange={(e) => handleFrameChange(Number(e.target.value))}
+              className="radar-timeline-slider"
+              title={t.radarTimeline}
+            />
+            <span className="timeline-counter">
+              {currentFrameIndex + 1}/{radarFrames.length}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Map Container Wrap with Dark Styling */}
       <div className="map-container-wrap">
@@ -344,18 +457,18 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
 
         {/* Radar Color Scale Legend */}
         <div className="map-radar-legend">
-          <span className="legend-title">Intensitas Radar:</span>
+          <span className="legend-title">{lang === 'id' ? 'Intensitas Radar:' : 'Radar Intensity:'}</span>
           <div className="legend-scale">
             <span className="legend-color-step" style={{ background: '#00e400' }}></span>
-            <span className="legend-label">Gerimis</span>
+            <span className="legend-label">{lang === 'id' ? 'Gerimis' : 'Light'}</span>
             <span className="legend-color-step" style={{ background: '#ffff00' }}></span>
-            <span className="legend-label">Sedang</span>
+            <span className="legend-label">{lang === 'id' ? 'Sedang' : 'Moderate'}</span>
             <span className="legend-color-step" style={{ background: '#ff7e00' }}></span>
-            <span className="legend-label">Lebat</span>
+            <span className="legend-label">{lang === 'id' ? 'Lebat' : 'Heavy'}</span>
             <span className="legend-color-step" style={{ background: '#ff0000' }}></span>
-            <span className="legend-label">Deras</span>
+            <span className="legend-label">{lang === 'id' ? 'Deras' : 'Intense'}</span>
             <span className="legend-color-step" style={{ background: '#99004c' }}></span>
-            <span className="legend-label">Badai</span>
+            <span className="legend-label">{lang === 'id' ? 'Badai' : 'Severe'}</span>
           </div>
         </div>
       </div>

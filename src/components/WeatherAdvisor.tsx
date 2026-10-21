@@ -8,8 +8,6 @@ import {
   Bike,
   Sun,
   ShieldCheck,
-  CheckCircle2,
-  AlertCircle,
 } from 'lucide-react';
 import {
   CurrentWeatherResponse,
@@ -17,12 +15,14 @@ import {
   ForecastResponse,
   UnitType,
 } from '@/types/weather';
+import { Language, getTranslation } from '@/utils/i18n';
 
 interface WeatherAdvisorProps {
   current: CurrentWeatherResponse;
   pollution: AirPollutionResponse | null;
   forecast: ForecastResponse | null;
   unit: UnitType;
+  lang?: Language;
 }
 
 export const WeatherAdvisor: React.FC<WeatherAdvisorProps> = ({
@@ -30,7 +30,9 @@ export const WeatherAdvisor: React.FC<WeatherAdvisorProps> = ({
   pollution,
   forecast,
   unit,
+  lang = 'id',
 }) => {
+  const t = getTranslation(lang);
   const tempC =
     unit === 'metric' ? current.main.temp : ((current.main.temp - 32) * 5) / 9;
   const weatherId = current.weather[0]?.id || 800;
@@ -39,71 +41,125 @@ export const WeatherAdvisor: React.FC<WeatherAdvisorProps> = ({
   const isNight = current.weather[0]?.icon?.endsWith('n');
 
   // 1. Outfit Recommendation
-  let outfitTitle = 'Pakaian Kasual Nyaman';
-  let outfitDesc = 'Kenakan kaos santai atau pakaian katun harian.';
+  let outfitTitle = lang === 'id' ? 'Pakaian Kasual Nyaman' : 'Comfortable Casual Outfit';
+  let outfitDesc =
+    lang === 'id'
+      ? 'Kenakan kaos santai atau pakaian katun harian.'
+      : 'Breathable t-shirt or comfortable cotton clothing.';
+
   if (tempC >= 31) {
-    outfitTitle = 'Pakaian Tipis & Ringan';
-    outfitDesc = 'Suhu cukup panas. Pilih bahan katun atau linen berpori agar tidak gerah.';
+    outfitTitle = lang === 'id' ? 'Pakaian Tipis & Ringan' : 'Light & Breathable Clothing';
+    outfitDesc =
+      lang === 'id'
+        ? 'Suhu cukup panas. Pilih bahan katun atau linen berpori agar tidak gerah.'
+        : 'Warm weather. Opt for airy cotton or linen to stay cool and comfortable.';
   } else if (tempC <= 19 && tempC > 12) {
-    outfitTitle = 'Jaket Ringan / Cardigan';
-    outfitDesc = 'Suhu agak sejuk. Siapkan jaket tipis, sweater, atau kemeja berlapis.';
+    outfitTitle = lang === 'id' ? 'Jaket Ringan / Cardigan' : 'Light Jacket or Layer';
+    outfitDesc =
+      lang === 'id'
+        ? 'Suhu agak sejuk. Siapkan jaket tipis, sweater, atau kemeja berlapis.'
+        : 'Mildly cool. A light windbreaker, hoodie, or sweater is recommended.';
   } else if (tempC <= 12) {
-    outfitTitle = 'Jaket Tebal / Hoodie Hangat';
-    outfitDesc = 'Suhu dingin. Disarankan memakai mantel, sweater tebal, atau syal.';
+    outfitTitle = lang === 'id' ? 'Jaket Tebal / Hoodie Hangat' : 'Warm Coat or Heavy Jacket';
+    outfitDesc =
+      lang === 'id'
+        ? 'Suhu dingin. Disarankan memakai mantel, sweater tebal, atau syal.'
+        : 'Chilly temperature. Bundle up with a thick coat, thermal layer, or scarf.';
   }
 
   // 2. Umbrella Recommendation
-  let umbrellaTitle = 'Payung Tidak Diperlukan';
-  let umbrellaDesc = 'Langit terpantau aman tanpa indikasi hujan waktu dekat.';
+  let umbrellaTitle = lang === 'id' ? 'Payung Tidak Diperlukan' : 'No Umbrella Needed';
+  let umbrellaDesc =
+    lang === 'id'
+      ? 'Langit terpantau aman tanpa indikasi hujan waktu dekat.'
+      : 'Clear skies without immediate indications of rain.';
   let umbrellaStatus = 'safe';
+
   if (weatherId >= 200 && weatherId < 600) {
-    umbrellaTitle = 'Wajib Bawa Payung / Jas Hujan';
-    umbrellaDesc = 'Sedang atau akan segera turun hujan. Bawa payung sebelum keluar.';
+    umbrellaTitle = lang === 'id' ? 'Wajib Bawa Payung / Jas Hujan' : 'Carry an Umbrella / Raincoat';
+    umbrellaDesc =
+      lang === 'id'
+        ? 'Sedang atau akan segera turun hujan. Bawa payung sebelum keluar.'
+        : 'Rain is actively falling or imminent. Don’t leave without rain gear.';
     umbrellaStatus = 'warn';
   } else if (nextPoP >= 45) {
-    umbrellaTitle = 'Siapkan Payung Cadangan';
-    umbrellaDesc = `Peluang presipitasi mencapai ${nextPoP}%. Waspada hujan tiba-tiba.`;
+    umbrellaTitle = lang === 'id' ? 'Siapkan Payung Cadangan' : 'Keep an Umbrella Handy';
+    umbrellaDesc =
+      lang === 'id'
+        ? `Peluang presipitasi mencapai ${nextPoP}%. Waspada hujan tiba-tiba.`
+        : `Precipitation chance reaches ${nextPoP}%. Be prepared for sudden showers.`;
     umbrellaStatus = 'warn';
   }
 
   // 3. Outdoor Activity / Sports
-  let activityTitle = 'Ideal untuk Olahraga Luar Ruangan';
-  let activityDesc = 'Kondisi cuaca sangat mendukung untuk joging, bersepeda, atau jalan santai.';
+  let activityTitle = lang === 'id' ? 'Ideal untuk Olahraga Luar' : 'Ideal for Outdoor Activities';
+  let activityDesc =
+    lang === 'id'
+      ? 'Kondisi cuaca sangat mendukung untuk joging, bersepeda, atau jalan santai.'
+      : 'Atmospheric conditions are great for running, cycling, or casual walks.';
   let activityStatus = 'good';
+
   if (weatherId >= 200 && weatherId < 600) {
-    activityTitle = 'Sebaiknya Olahraga di Dalam Ruangan';
-    activityDesc = 'Hujan dan jalanan licin. Lebih aman berolahraga di gym atau rumah.';
+    activityTitle = lang === 'id' ? 'Sebaiknya Olahraga di Dalam' : 'Stick to Indoor Exercises';
+    activityDesc =
+      lang === 'id'
+        ? 'Hujan dan jalanan licin. Lebih aman berolahraga di gym atau rumah.'
+        : 'Wet and slippery pavements. Indoor gym or home workout is safer.';
     activityStatus = 'bad';
   } else if (tempC >= 34) {
-    activityTitle = 'Hindari Olahraga di Bawah Terik';
-    activityDesc = 'Suhu ekstrem panas. Tunda aktivitas berat hingga sore hari tiba.';
+    activityTitle = lang === 'id' ? 'Hindari Olahraga di Bawah Terik' : 'Avoid Intense Midday Sun';
+    activityDesc =
+      lang === 'id'
+        ? 'Suhu ekstrem panas. Tunda aktivitas berat hingga sore hari tiba.'
+        : 'Extreme heat risk. Postpone heavy cardio until cooler twilight.';
     activityStatus = 'bad';
   } else if (aqiScore >= 4) {
-    activityTitle = 'Batasi Lari / Kardio Outdoor';
-    activityDesc = 'Partikel polusi tinggi dapat mengganggu pernapasan paru-paru.';
+    activityTitle = lang === 'id' ? 'Batasi Lari Outdoor' : 'Limit Outdoor Cardio';
+    activityDesc =
+      lang === 'id'
+        ? 'Partikel polusi tinggi dapat mengganggu pernapasan paru-paru.'
+        : 'Elevated pollution particles can cause respiratory irritation.';
     activityStatus = 'bad';
   }
 
   // 4. Sunscreen / UV Protection
-  let sunTitle = 'Perlindungan Surya Minimal';
-  let sunDesc = 'Indeks UV relatif aman untuk paparan singkat.';
+  let sunTitle = lang === 'id' ? 'Perlindungan Surya Minimal' : 'Low UV Exposure';
+  let sunDesc =
+    lang === 'id'
+      ? 'Indeks UV relatif aman untuk paparan singkat.'
+      : 'UV index is moderate to low for brief outdoor exposure.';
+
   if (!isNight && (weatherId === 800 || weatherId === 801) && tempC >= 27) {
-    sunTitle = 'Gunakan Sunscreen (Tabir Surya)';
-    sunDesc = 'Sinar matahari cerah langsung. Pakai sunscreen SPF 30+ & kacamata hitam.';
+    sunTitle = lang === 'id' ? 'Gunakan Sunscreen (SPF 30+)' : 'Apply Sunscreen (SPF 30+)';
+    sunDesc =
+      lang === 'id'
+        ? 'Sinar matahari cerah langsung. Pakai sunscreen SPF 30+ & kacamata hitam.'
+        : 'Direct solar radiation. Wear broad-spectrum sunscreen & sunglasses.';
   } else if (isNight) {
-    sunTitle = 'Malam Hari';
-    sunDesc = 'Tidak memerlukan perlindungan sinar UV.';
+    sunTitle = lang === 'id' ? 'Malam Hari' : 'Nighttime';
+    sunDesc =
+      lang === 'id' ? 'Tidak memerlukan perlindungan sinar UV.' : 'No UV protection required.';
   }
 
   // 5. Air Health
-  let healthTitle = 'Udara Segar & Bersih';
-  let healthDesc = 'Kualitas udara sangat baik, nyaman untuk bernapas bebas.';
+  let healthTitle = lang === 'id' ? 'Udara Segar & Bersih' : 'Fresh & Clean Air';
+  let healthDesc =
+    lang === 'id'
+      ? 'Kualitas udara sangat baik, nyaman untuk bernapas bebas.'
+      : 'Excellent air quality, safe and refreshing to breathe.';
+
   if (aqiScore === 3) {
-    healthTitle = 'Kualitas Udara Sedang';
-    healthDesc = 'Aman untuk masyarakat umum, kelompok hipersensitif perlu waspada.';
+    healthTitle = lang === 'id' ? 'Kualitas Udara Sedang' : 'Moderate Air Quality';
+    healthDesc =
+      lang === 'id'
+        ? 'Aman untuk masyarakat umum, kelompok hipersensitif perlu waspada.'
+        : 'Acceptable for most; sensitive individuals should take note.';
   } else if (aqiScore >= 4) {
-    healthTitle = 'Disarankan Mengenakan Masker';
-    healthDesc = 'Partikulat debu & polutan tinggi. Gunakan masker medis di luar.';
+    healthTitle = lang === 'id' ? 'Disarankan Mengenakan Masker' : 'Mask Recommended Outdoors';
+    healthDesc =
+      lang === 'id'
+        ? 'Partikulat debu & polutan tinggi. Gunakan masker medis di luar.'
+        : 'High particulate matter. Consider wearing a protective mask outdoors.';
   }
 
   return (
@@ -111,8 +167,8 @@ export const WeatherAdvisor: React.FC<WeatherAdvisorProps> = ({
       <div className="card-header">
         <div className="card-title">
           <Sparkles size={20} color="#f59e0b" />
-          <h3>Smart Weather Advisor</h3>
-          <span className="badge-sub">Panduan Aktivitas & Gaya Hidup</span>
+          <h3>{t.advisorTitle}</h3>
+          <span className="badge-sub">{lang === 'id' ? 'Panduan Gaya Hidup' : 'Lifestyle Guidance'}</span>
         </div>
       </div>
 
@@ -123,7 +179,7 @@ export const WeatherAdvisor: React.FC<WeatherAdvisorProps> = ({
             <Shirt size={22} color="#38bdf8" />
           </div>
           <div className="advisor-text">
-            <span className="advisor-category">Rekomendasi Pakaian</span>
+            <span className="advisor-category">{t.outfitSuggestion}</span>
             <h4>{outfitTitle}</h4>
             <p>{outfitDesc}</p>
           </div>
@@ -142,7 +198,7 @@ export const WeatherAdvisor: React.FC<WeatherAdvisorProps> = ({
             />
           </div>
           <div className="advisor-text">
-            <span className="advisor-category">Payung & Presipitasi</span>
+            <span className="advisor-category">{t.umbrellaSuggestion}</span>
             <h4>{umbrellaTitle}</h4>
             <p>{umbrellaDesc}</p>
           </div>
@@ -161,7 +217,7 @@ export const WeatherAdvisor: React.FC<WeatherAdvisorProps> = ({
             />
           </div>
           <div className="advisor-text">
-            <span className="advisor-category">Aktivitas Outdoor</span>
+            <span className="advisor-category">{t.outdoorSports}</span>
             <h4>{activityTitle}</h4>
             <p>{activityDesc}</p>
           </div>
@@ -173,7 +229,7 @@ export const WeatherAdvisor: React.FC<WeatherAdvisorProps> = ({
             <Sun size={22} color="#fbbf24" />
           </div>
           <div className="advisor-text">
-            <span className="advisor-category">Perlindungan Kulit & UV</span>
+            <span className="advisor-category">{t.sunscreenProtection}</span>
             <h4>{sunTitle}</h4>
             <p>{sunDesc}</p>
           </div>
@@ -185,7 +241,7 @@ export const WeatherAdvisor: React.FC<WeatherAdvisorProps> = ({
             <ShieldCheck size={22} color="#a855f7" />
           </div>
           <div className="advisor-text">
-            <span className="advisor-category">Kesehatan Lingkungan & Masker</span>
+            <span className="advisor-category">{t.airHealth}</span>
             <h4>{healthTitle}</h4>
             <p>{healthDesc}</p>
           </div>

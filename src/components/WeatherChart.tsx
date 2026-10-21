@@ -3,19 +3,23 @@
 import React, { useState, useRef } from 'react';
 import { TrendingUp, Droplets, Wind, Sparkles } from 'lucide-react';
 import { ForecastItem, UnitType } from '@/types/weather';
+import { Language, getTranslation } from '@/utils/i18n';
 import { MiniWeatherIcon } from './WeatherIcons';
 
 interface WeatherChartProps {
   items: ForecastItem[];
   timezoneOffset: number;
   unit: UnitType;
+  lang?: Language;
 }
 
 export const WeatherChart: React.FC<WeatherChartProps> = ({
   items,
   timezoneOffset,
   unit,
+  lang = 'id',
 }) => {
+  const t = getTranslation(lang);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -41,15 +45,15 @@ export const WeatherChart: React.FC<WeatherChartProps> = ({
   // Calculate coordinates for points
   const points = chartSlots.map((item, index) => {
     const x = paddingX + index * stepX;
-    const t = Math.round(item.main.temp);
+    const itemTemp = Math.round(item.main.temp);
     // Inverted Y: higher temp = lower Y
-    const y = paddingTop + usableHeight - ((t - minTemp) / tempRange) * usableHeight;
+    const y = paddingTop + usableHeight - ((itemTemp - minTemp) / tempRange) * usableHeight;
     const pop = Math.round((item.pop || 0) * 100);
     const date = new Date((item.dt + timezoneOffset) * 1000);
     const hour = date.getUTCHours();
-    const timeLabel = index === 0 ? 'Sekarang' : `${String(hour).padStart(2, '0')}:00`;
+    const timeLabel = index === 0 ? t.now : `${String(hour).padStart(2, '0')}:00`;
 
-    return { x, y, temp: t, pop, timeLabel, item };
+    return { x, y, temp: itemTemp, pop, timeLabel, item };
   });
 
   // Construct smooth cubic Bezier path
@@ -110,8 +114,8 @@ export const WeatherChart: React.FC<WeatherChartProps> = ({
       <div className="card-header">
         <div className="card-title">
           <TrendingUp size={20} color="#38bdf8" />
-          <h3>Grafik Suhu & Tren Presipitasi</h3>
-          <span className="badge-sub">24 Jam ke Depan</span>
+          <h3>{t.chartTitle}</h3>
+          <span className="badge-sub">{lang === 'id' ? '24 Jam ke Depan' : 'Next 24 Hours'}</span>
         </div>
 
         {activePoint && (
