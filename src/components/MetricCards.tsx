@@ -269,10 +269,16 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
             <span className="metric-main-value">{visDisplay}</span>
             <span className="metric-sub-unit">{unit === 'metric' ? 'km' : 'mi'}</span>
           </div>
+          <div className="progress-bar-wrap">
+            <div
+              className="progress-bar-fill vis-fill"
+              style={{ width: `${Math.min(100, Math.max(10, (current.visibility / 10000) * 100))}%` }}
+            ></div>
+          </div>
           <p className="metric-subtext">
             {current.visibility >= 9000
               ? (lang === 'id' ? 'Jarak pandang sangat jernih tanpa halangan.' : 'Crystal clear visibility without obstruction.')
-              : (lang === 'id' ? 'Jarak pandang memadai untuk aktivitas luar.' : 'Sufficient visibility for outdoor travel.')}
+              : (lang === 'id' ? 'Jarak pandang memadai untuk perjalanan.' : 'Sufficient visibility for outdoor travel.')}
           </p>
         </div>
       </div>
@@ -296,12 +302,18 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
             <span className="metric-main-value">{current.main.pressure}</span>
             <span className="metric-sub-unit">hPa</span>
           </div>
+          <div className="progress-bar-wrap">
+            <div
+              className="progress-bar-fill pressure-fill"
+              style={{ width: `${Math.max(10, Math.min(100, ((current.main.pressure - 960) / 80) * 100))}%` }}
+            ></div>
+          </div>
           <p className="metric-subtext">
             {current.main.pressure > 1013
               ? t.pressureRising
               : current.main.pressure < 1005
               ? t.pressureFalling
-              : t.pressureStable}
+              : (lang === 'id' ? 'Tekanan atmosfer barometrik stabil.' : 'Barometric atmospheric pressure is stable.')}
           </p>
         </div>
       </div>
@@ -332,7 +344,7 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
             ></div>
           </div>
           <p className="metric-subtext">
-            {lang === 'id' ? 'Persentase langit tertutup oleh formasi awan.' : 'Cloud density covering the celestial dome.'}
+            {lang === 'id' ? 'Persentase langit tertutup oleh awan.' : 'Cloud density covering the celestial dome.'}
           </p>
         </div>
       </div>
@@ -360,8 +372,8 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
           </div>
           <p className="metric-subtext">
             {nextPoP >= 60
-              ? (lang === 'id' ? 'Kemungkinan besar akan turun presipitasi.' : 'High likelihood of impending precipitation.')
-              : (lang === 'id' ? 'Kemungkinan presipitasi dalam beberapa jam ke depan.' : 'Precipitation probability over incoming hours.')}
+              ? (lang === 'id' ? 'Kemungkinan besar akan turun hujan.' : 'High probability of rain coming soon.')
+              : (lang === 'id' ? 'Peluang turun hujan beberapa jam ke depan.' : 'Precipitation probability over incoming hours.')}
           </p>
         </div>
       </div>

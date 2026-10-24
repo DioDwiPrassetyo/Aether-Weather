@@ -1337,38 +1337,47 @@ body {
 
 .metric-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 8px;
   margin-bottom: 12px;
   position: relative;
   z-index: 1;
+  min-width: 0;
 }
 
 .metric-title {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.82rem;
+  font-weight: 700;
   color: #bae6fd;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
+  min-width: 0;
+  flex: 1;
+  line-height: 1.25;
 }
 
 .metric-title svg {
   color: #fef08a;
   filter: drop-shadow(0 0 6px rgba(254, 240, 138, 0.45));
+  flex-shrink: 0;
 }
 
 .metric-badge {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  padding: 3px 10px;
+  padding: 2.5px 9px;
   border-radius: var(--radius-full);
   background: rgba(254, 240, 138, 0.14);
   border: 1px solid rgba(254, 240, 138, 0.32);
   color: #fef08a;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1.2;
 }
 
 .metric-body {
@@ -1434,6 +1443,8 @@ body {
 
 .cloud-fill { background: linear-gradient(90deg, #94a3b8, #fef08a); }
 .rain-fill { background: linear-gradient(90deg, #38bdf8, #fef08a); }
+.vis-fill { background: linear-gradient(90deg, #38bdf8 0%, #818cf8 100%); box-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
+.pressure-fill { background: linear-gradient(90deg, #818cf8 0%, #c084fc 100%); box-shadow: 0 0 10px rgba(129, 140, 248, 0.4); }
 
 /* Wind & Compass */
 .wind-body {
@@ -3506,9 +3517,74 @@ body {
   }
 
   .metric-card {
-    padding: 14px 12px;
-    min-height: 140px;
-    border-radius: var(--radius-md);
+    padding: 13px 12px !important;
+    min-height: 156px !important;
+    border-radius: var(--radius-md) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+  }
+
+  .metric-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    margin-bottom: 8px !important;
+    min-width: 0 !important;
+  }
+
+  .metric-title {
+    font-size: 0.72rem !important;
+    gap: 5px !important;
+    letter-spacing: 0.3px !important;
+    line-height: 1.25 !important;
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+
+  .metric-title svg {
+    width: 14px !important;
+    height: 14px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .metric-badge {
+    font-size: 0.68rem !important;
+    padding: 2px 7px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    line-height: 1.2 !important;
+  }
+
+  .metric-body {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    flex: 1 !important;
+    gap: 6px !important;
+  }
+
+  .metric-main-value {
+    font-size: 1.65rem !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+  }
+
+  .metric-sub-unit {
+    font-size: 0.85rem !important;
+  }
+
+  .progress-bar-wrap {
+    height: 3.5px !important;
+    margin: 3px 0 5px !important;
+  }
+
+  .metric-subtext {
+    font-size: 0.72rem !important;
+    line-height: 1.35 !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+    margin: 0 !important;
   }
 
   .wind-body {
