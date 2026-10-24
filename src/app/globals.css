@@ -4240,21 +4240,26 @@ body {
   border: 1px solid rgba(254, 240, 138, 0.35);
   color: #fef08a;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(254, 240, 138, 0.25);
-  width: 34px;
+  width: auto;
   height: 34px;
+  padding: 0 12px;
+  gap: 6px;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
 }
 
 .hero-share-action-btn:hover {
   background: linear-gradient(135deg, rgba(254, 240, 138, 0.28) 0%, rgba(56, 189, 248, 0.24) 100%);
   border-color: #fef08a;
   color: #ffffff;
-  transform: translateY(-2px) scale(1.08);
+  transform: translateY(-2px) scale(1.04);
   box-shadow: 0 8px 24px rgba(254, 240, 138, 0.35), inset 0 1px 0 rgba(254, 240, 138, 0.50);
 }
 
@@ -4929,6 +4934,14 @@ body {
   white-space: nowrap;
 }
 
+/* Share Actions Section */
+.share-actions-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
 /* Share Options Header */
 .share-options-header {
   display: flex;
@@ -4943,6 +4956,26 @@ body {
   font-weight: 700;
   letter-spacing: 0.8px;
   color: #bae6fd;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Share Preview Header */
+.share-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+  margin-bottom: -3px;
+}
+
+.share-preview-title {
+  font-size: 0.73rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #fef08a;
   text-transform: uppercase;
   display: flex;
   align-items: center;

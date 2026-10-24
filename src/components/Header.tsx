@@ -508,6 +508,7 @@ export const Header: React.FC<HeaderProps> = ({
           title={t.shareWeather}
         >
           <Share2 size={16} />
+          <span className="control-btn-text">{lang === 'id' ? 'Bagikan' : 'Share'}</span>
         </button>
 
         {/* Temperature Unit Toggle (°C / °F) */}

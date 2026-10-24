@@ -19,13 +19,9 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # Environment files (keep .env.example)
-.env*.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env.example
 .env
-
+.env*.local
+!.env.example
 
 # Vercel deployment metadata
 .vercel
@@ -40,6 +36,3 @@ ehthumbs.db
 !.vscode/extensions.json
 .idea/
 *.tsbuildinfo
-
-.gitignore
-.AGENTS.md

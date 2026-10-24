@@ -663,80 +663,101 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
     return false;
   };
 
-  // 2. Copy Image to Clipboard (Ctrl+V into WhatsApp, Discord, Slack, etc.)
+  // 2. Copy Image to Clipboard with Smart Auto-Fallback (Ctrl+V, Share Sheet, or Direct Download)
   const handleCopyImage = async () => {
     setIsGenerating(true);
     try {
       const canvas = await renderCanvasCard();
       if (!canvas) throw new Error('Canvas unavailable');
 
-      if (
-        typeof navigator === 'undefined' ||
-        !navigator.clipboard ||
-        typeof ClipboardItem === 'undefined'
-      ) {
-        // Fallback to text copy if Image Clipboard is unsupported
-        const directUrl = getDirectUrl();
-        const textToCopy = `${shareSummaryText}\n\n🔗 ${directUrl}`;
-        const copied = await copyTextToClipboard(textToCopy);
-        if (copied) {
-          setIsCopied(true);
-          onShowToast(
-            lang === 'id'
-              ? 'Browser tidak mendukung salin gambar langsung. Teks ringkasan cuaca disalin!'
-              : 'Direct image copy not supported. Weather summary copied!',
-            'info'
-          );
-          setTimeout(() => setIsCopied(false), 2500);
-        } else {
-          onShowToast(lang === 'id' ? 'Gagal menyalin gambar kartu.' : 'Failed to copy card image.', 'error');
+      // Helper to generate PNG Blob
+      const createBlobPromise = () =>
+        new Promise<Blob>((resolve, reject) => {
+          canvas.toBlob((b) => {
+            if (b) resolve(b);
+            else reject(new Error('Failed to generate image blob'));
+          }, 'image/png');
+        });
+
+      // Check if Clipboard API with ClipboardItem is supported
+      const hasClipboardItem =
+        typeof navigator !== 'undefined' &&
+        navigator.clipboard &&
+        typeof navigator.clipboard.write === 'function' &&
+        typeof ClipboardItem !== 'undefined';
+
+      if (!hasClipboardItem) {
+        // Smart Auto-Fallback:
+        // 1. If on mobile device with native share, open share sheet with image file!
+        if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+          await handleNativeShare();
+          return;
         }
-        setIsGenerating(false);
+
+        // 2. Otherwise (e.g. desktop Firefox / non-secure HTTP), automatically download PNG!
+        await handleDownloadImage();
+        onShowToast(
+          lang === 'id'
+            ? 'Browser tidak mendukung salin clipboard gambar langsung. Gambar kartu cuaca otomatis diunduh (PNG)!'
+            : 'Browser does not support direct clipboard image copy. PNG image downloaded automatically!',
+          'info'
+        );
         return;
       }
 
-      canvas.toBlob(async (blob) => {
-        if (!blob) {
-          setIsGenerating(false);
-          onShowToast(lang === 'id' ? 'Gagal memproses gambar kartu.' : 'Failed to process card image.', 'error');
-          return;
-        }
+      let copySuccess = false;
+
+      // Method 1 (W3C standard for Chrome/Edge/Safari): Pass Promise<Blob> to ClipboardItem
+      try {
+        const item = new ClipboardItem({
+          'image/png': createBlobPromise(),
+        });
+        await navigator.clipboard.write([item]);
+        copySuccess = true;
+      } catch (promiseErr) {
+        console.warn('ClipboardItem promise write rejected, trying resolved blob:', promiseErr);
+        // Method 2 (Fallback for browsers requiring resolved blob):
         try {
-          await navigator.clipboard.write([
-            new ClipboardItem({
-              'image/png': blob,
-            }),
-          ]);
-          setIsImageCopied(true);
-          onShowToast(t.imageCopiedToast, 'success');
-          setTimeout(() => setIsImageCopied(false), 2500);
-        } catch (writeErr) {
-          console.warn('Image clipboard write failed, falling back to text copy:', writeErr);
-          const directUrl = getDirectUrl();
-          const textToCopy = `${shareSummaryText}\n\n🔗 ${directUrl}`;
-          const copied = await copyTextToClipboard(textToCopy);
-          if (copied) {
-            setIsCopied(true);
-            onShowToast(
-              lang === 'id'
-                ? 'Izin salin gambar ditolak oleh sistem. Teks ringkasan cuaca disalin!'
-                : 'Image clipboard permission denied. Text summary copied!',
-              'info'
-            );
-            setTimeout(() => setIsCopied(false), 2500);
-          } else {
-            onShowToast(lang === 'id' ? 'Gagal menyalin ke papan klip.' : 'Failed to copy to clipboard.', 'error');
-          }
-        } finally {
-          setIsGenerating(false);
+          const blob = await createBlobPromise();
+          const item = new ClipboardItem({
+            'image/png': blob,
+          });
+          await navigator.clipboard.write([item]);
+          copySuccess = true;
+        } catch (directErr) {
+          console.error('Direct blob write also failed:', directErr);
         }
-      }, 'image/png');
+      }
+
+      setIsGenerating(false);
+
+      if (copySuccess) {
+        setIsImageCopied(true);
+        onShowToast(
+          lang === 'id'
+            ? 'Gambar kartu cuaca berhasil disalin! Anda bisa langsung tempel (Ctrl+V / Paste) di WhatsApp, Telegram, dll.'
+            : 'Weather card image copied! You can paste (Ctrl+V) it anywhere.',
+          'success'
+        );
+        setTimeout(() => setIsImageCopied(false), 3000);
+      } else {
+        // Fallback if browser rejected permission at runtime
+        if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+          await handleNativeShare();
+        } else {
+          await handleDownloadImage();
+          onShowToast(
+            lang === 'id'
+              ? 'Izin clipboard gambar dibatasi browser. Gambar kartu cuaca otomatis diunduh (PNG)!'
+              : 'Clipboard image copy restricted by browser. PNG image downloaded automatically!',
+            'info'
+          );
+        }
+      }
     } catch (err) {
       console.error('handleCopyImage error:', err);
       setIsGenerating(false);
-      const directUrl = getDirectUrl();
-      const textToCopy = `${shareSummaryText}\n\n🔗 ${directUrl}`;
-      await copyTextToClipboard(textToCopy);
+      await handleDownloadImage();
     }
   };
 
@@ -887,6 +908,7 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
+        {/* Header */}
         <div className="modal-header">
           <div>
             <h3 className="modal-title">{t.shareTitle}</h3>
@@ -895,6 +917,121 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
           <button className="modal-close-btn" onClick={onClose} title={t.closeShare}>
             <X size={20} />
           </button>
+        </div>
+
+        {/* Hidden Canvas for High-Resolution Vector Export */}
+        <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
+
+        {/* 1. Primary Download & Share Options - ALWAYS VISIBLE FIRST! */}
+        <div className="share-actions-section">
+          <div className="share-options-header">
+            <span className="share-options-title">
+              {lang === 'id' ? '✦ OPSI UNDUH & BAGIKAN' : '✦ DOWNLOAD & SHARE OPTIONS'}
+            </span>
+          </div>
+
+          {/* Primary Action Buttons */}
+          <div className="share-actions-row">
+            <button
+              className="share-btn primary"
+              onClick={handleDownloadImage}
+              disabled={isGenerating}
+              title={t.downloadImage}
+              id="btn-download-weather-card"
+            >
+              <Download size={18} />
+              <span>{isGenerating ? (lang === 'id' ? 'Memproses...' : 'Processing...') : t.downloadImage}</span>
+            </button>
+
+            <button
+              className="share-btn secondary"
+              onClick={handleCopyImage}
+              disabled={isGenerating}
+              title={t.copyImage}
+            >
+              {isImageCopied ? <Check size={17} color="#4ade80" /> : <ImageIcon size={17} />}
+              <span className="btn-label-desktop">
+                {isImageCopied ? (lang === 'id' ? 'Gambar Tersalin!' : 'Image Copied!') : t.copyImage}
+              </span>
+              <span className="btn-label-mobile">
+                {isImageCopied ? (lang === 'id' ? 'Tersalin!' : 'Copied!') : (lang === 'id' ? 'Salin Gambar' : 'Copy Image')}
+              </span>
+            </button>
+
+            <button
+              className="share-btn secondary"
+              onClick={handleNativeShare}
+              disabled={isGenerating}
+              title={t.shareToApps}
+            >
+              <Share2 size={17} />
+              <span className="btn-label-desktop">{t.shareToApps}</span>
+              <span className="btn-label-mobile">{lang === 'id' ? 'Bagikan' : 'Share'}</span>
+            </button>
+          </div>
+
+          {/* Quick Social & Link Share Row */}
+          <div className="share-social-row">
+            <button
+              className="social-share-btn btn-whatsapp"
+              onClick={handleShareWhatsApp}
+              title="Bagikan ke WhatsApp"
+            >
+              <span className="social-icon">💬</span>
+              <span className="social-btn-text">WhatsApp</span>
+            </button>
+
+            <button
+              className="social-share-btn btn-telegram"
+              onClick={handleShareTelegram}
+              title="Bagikan ke Telegram"
+            >
+              <span className="social-icon">✈️</span>
+              <span className="social-btn-text">Telegram</span>
+            </button>
+
+            <button
+              className="social-share-btn btn-twitter"
+              onClick={handleShareTwitter}
+              title="Bagikan ke X / Twitter"
+            >
+              <span className="social-icon">✦</span>
+              <span className="social-btn-text">X / Twitter</span>
+            </button>
+
+            <button
+              className="social-share-btn btn-copy-link"
+              onClick={handleCopyLink}
+              title={t.copyLink}
+            >
+              {isLinkCopied ? (
+                <Check size={15} color="#4ade80" />
+              ) : (
+                <Link2 size={15} color="#38bdf8" />
+              )}
+              <span className="social-btn-text">
+                {isLinkCopied ? (lang === 'id' ? 'Tersalin!' : 'Copied!') : t.copyLink}
+              </span>
+            </button>
+
+            <button
+              className="social-share-btn btn-copy-text"
+              onClick={handleCopyText}
+              title={t.copyTextInfo}
+            >
+              {isCopied ? <Check size={15} color="#4ade80" /> : <Copy size={15} />}
+              <span className="social-btn-text">
+                {isCopied ? (lang === 'id' ? 'Tersalin!' : 'Copied!') : t.copyTextInfo}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* 2. Visual Card Preview Header & Preview Card */}
+        <div className="share-preview-header">
+          <span className="share-preview-title">
+            {lang === 'id' ? '✦ PRATINJAU KARTU CUACA' : '✦ LIVE CARD PREVIEW'}
+          </span>
         </div>
 
         {/* Live Visual Card Preview (Celestial Astronomy Theme) */}
@@ -955,111 +1092,6 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
               <span>AQI {aqiLabel}</span>
             </div>
           </div>
-        </div>
-
-        {/* Hidden Canvas for High-Resolution Vector Export */}
-        <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
-
-        {/* Share Options Header */}
-        <div className="share-options-header">
-          <span className="share-options-title">
-            {lang === 'id' ? '✦ OPSI UNDUH & BAGIKAN' : '✦ DOWNLOAD & SHARE OPTIONS'}
-          </span>
-        </div>
-
-        {/* Primary Action Buttons */}
-        <div className="share-actions-row">
-          <button
-            className="share-btn primary"
-            onClick={handleDownloadImage}
-            disabled={isGenerating}
-            title={t.downloadImage}
-          >
-            <Download size={17} />
-            <span>{isGenerating ? (lang === 'id' ? 'Memproses...' : 'Processing...') : t.downloadImage}</span>
-          </button>
-
-          <button
-            className="share-btn secondary"
-            onClick={handleCopyImage}
-            disabled={isGenerating}
-            title={t.copyImage}
-          >
-            {isImageCopied ? <Check size={17} color="#4ade80" /> : <ImageIcon size={17} />}
-            <span className="btn-label-desktop">
-              {isImageCopied ? (lang === 'id' ? 'Gambar Tersalin!' : 'Image Copied!') : t.copyImage}
-            </span>
-            <span className="btn-label-mobile">
-              {isImageCopied ? (lang === 'id' ? 'Tersalin!' : 'Copied!') : (lang === 'id' ? 'Salin Gambar' : 'Copy Image')}
-            </span>
-          </button>
-
-          <button
-            className="share-btn secondary"
-            onClick={handleNativeShare}
-            disabled={isGenerating}
-            title={t.shareToApps}
-          >
-            <Share2 size={17} />
-            <span className="btn-label-desktop">{t.shareToApps}</span>
-            <span className="btn-label-mobile">{lang === 'id' ? 'Bagikan' : 'Share'}</span>
-          </button>
-        </div>
-
-        {/* Quick Social & Link Share Row */}
-        <div className="share-social-row">
-          <button
-            className="social-share-btn btn-whatsapp"
-            onClick={handleShareWhatsApp}
-            title="Bagikan ke WhatsApp"
-          >
-            <span className="social-icon">💬</span>
-            <span className="social-btn-text">WhatsApp</span>
-          </button>
-
-          <button
-            className="social-share-btn btn-telegram"
-            onClick={handleShareTelegram}
-            title="Bagikan ke Telegram"
-          >
-            <span className="social-icon">✈️</span>
-            <span className="social-btn-text">Telegram</span>
-          </button>
-
-          <button
-            className="social-share-btn btn-twitter"
-            onClick={handleShareTwitter}
-            title="Bagikan ke X / Twitter"
-          >
-            <span className="social-icon">✦</span>
-            <span className="social-btn-text">X / Twitter</span>
-          </button>
-
-          <button
-            className="social-share-btn btn-copy-link"
-            onClick={handleCopyLink}
-            title={t.copyLink}
-          >
-            {isLinkCopied ? (
-              <Check size={15} color="#4ade80" />
-            ) : (
-              <Link2 size={15} color="#38bdf8" />
-            )}
-            <span className="social-btn-text">
-              {isLinkCopied ? (lang === 'id' ? 'Tersalin!' : 'Copied!') : t.copyLink}
-            </span>
-          </button>
-
-          <button
-            className="social-share-btn btn-copy-text"
-            onClick={handleCopyText}
-            title={t.copyTextInfo}
-          >
-            {isCopied ? <Check size={15} color="#4ade80" /> : <Copy size={15} />}
-            <span className="social-btn-text">
-              {isCopied ? (lang === 'id' ? 'Tersalin!' : 'Copied!') : t.copyTextInfo}
-            </span>
-          </button>
         </div>
       </div>
     </div>
