@@ -917,10 +917,14 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
                 <span className="num">{Math.round(weather.main.temp)}</span>
                 <span className="unit">{unitSymbol}</span>
               </div>
-              <p className="preview-feels">
-                {t.feelsLike} <strong>{Math.round(weather.main.feels_like)}°</strong> &bull; H:{' '}
-                {Math.round(weather.main.temp_max)}° L: {Math.round(weather.main.temp_min)}°
-              </p>
+              <div className="preview-feels-row">
+                <span className="feels-tag">
+                  {t.feelsLike} <strong>{Math.round(weather.main.feels_like)}°</strong>
+                </span>
+                <span className="range-tag">
+                  H: {Math.round(weather.main.temp_max)}° L: {Math.round(weather.main.temp_min)}°
+                </span>
+              </div>
             </div>
 
             <div className="preview-art">
@@ -933,21 +937,21 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
 
           <div className="preview-metrics">
             <div className="p-item">
-              <Wind size={15} color="#38bdf8" />
+              <Wind size={14} color="#38bdf8" />
               <span>
                 {windDisplay} {speedUnit}
               </span>
             </div>
             <div className="p-item">
-              <Droplets size={15} color="#38bdf8" />
+              <Droplets size={14} color="#38bdf8" />
               <span>{weather.main.humidity}%</span>
             </div>
             <div className="p-item">
-              <Gauge size={15} color="#38bdf8" />
+              <Gauge size={14} color="#38bdf8" />
               <span>{weather.main.pressure} hPa</span>
             </div>
             <div className="p-item">
-              <Leaf size={15} color="#38bdf8" />
+              <Leaf size={14} color="#38bdf8" />
               <span>AQI {aqiLabel}</span>
             </div>
           </div>
@@ -955,6 +959,13 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
 
         {/* Hidden Canvas for High-Resolution Vector Export */}
         <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
+
+        {/* Share Options Header */}
+        <div className="share-options-header">
+          <span className="share-options-title">
+            {lang === 'id' ? '✦ OPSI UNDUH & BAGIKAN' : '✦ DOWNLOAD & SHARE OPTIONS'}
+          </span>
+        </div>
 
         {/* Primary Action Buttons */}
         <div className="share-actions-row">
@@ -964,7 +975,8 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
             disabled={isGenerating}
             title={t.downloadImage}
           >
-            <Download size={18} /> {isGenerating ? 'Memproses...' : t.downloadImage}
+            <Download size={17} />
+            <span>{isGenerating ? (lang === 'id' ? 'Memproses...' : 'Processing...') : t.downloadImage}</span>
           </button>
 
           <button
@@ -973,8 +985,13 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
             disabled={isGenerating}
             title={t.copyImage}
           >
-            {isImageCopied ? <Check size={18} color="#4ade80" /> : <ImageIcon size={18} />}
-            {isImageCopied ? 'Gambar Tersalin!' : t.copyImage}
+            {isImageCopied ? <Check size={17} color="#4ade80" /> : <ImageIcon size={17} />}
+            <span className="btn-label-desktop">
+              {isImageCopied ? (lang === 'id' ? 'Gambar Tersalin!' : 'Image Copied!') : t.copyImage}
+            </span>
+            <span className="btn-label-mobile">
+              {isImageCopied ? (lang === 'id' ? 'Tersalin!' : 'Copied!') : (lang === 'id' ? 'Salin Gambar' : 'Copy Image')}
+            </span>
           </button>
 
           <button
@@ -983,7 +1000,9 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
             disabled={isGenerating}
             title={t.shareToApps}
           >
-            <Share2 size={18} /> {t.shareToApps}
+            <Share2 size={17} />
+            <span className="btn-label-desktop">{t.shareToApps}</span>
+            <span className="btn-label-mobile">{lang === 'id' ? 'Bagikan' : 'Share'}</span>
           </button>
         </div>
 
@@ -994,7 +1013,8 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
             onClick={handleShareWhatsApp}
             title="Bagikan ke WhatsApp"
           >
-            <span className="social-icon">💬</span> WhatsApp
+            <span className="social-icon">💬</span>
+            <span className="social-btn-text">WhatsApp</span>
           </button>
 
           <button
@@ -1002,7 +1022,8 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
             onClick={handleShareTelegram}
             title="Bagikan ke Telegram"
           >
-            <span className="social-icon">✈️</span> Telegram
+            <span className="social-icon">✈️</span>
+            <span className="social-btn-text">Telegram</span>
           </button>
 
           <button
@@ -1010,7 +1031,8 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
             onClick={handleShareTwitter}
             title="Bagikan ke X / Twitter"
           >
-            <span className="social-icon">✦</span> X / Twitter
+            <span className="social-icon">✦</span>
+            <span className="social-btn-text">X / Twitter</span>
           </button>
 
           <button
@@ -1019,11 +1041,13 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
             title={t.copyLink}
           >
             {isLinkCopied ? (
-              <Check size={16} color="#4ade80" />
+              <Check size={15} color="#4ade80" />
             ) : (
-              <Link2 size={16} color="#38bdf8" />
+              <Link2 size={15} color="#38bdf8" />
             )}
-            {isLinkCopied ? 'Tersalin!' : t.copyLink}
+            <span className="social-btn-text">
+              {isLinkCopied ? (lang === 'id' ? 'Tersalin!' : 'Copied!') : t.copyLink}
+            </span>
           </button>
 
           <button
@@ -1031,8 +1055,10 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
             onClick={handleCopyText}
             title={t.copyTextInfo}
           >
-            {isCopied ? <Check size={16} color="#4ade80" /> : <Copy size={16} />}
-            {isCopied ? 'Tersalin!' : t.copyTextInfo}
+            {isCopied ? <Check size={15} color="#4ade80" /> : <Copy size={15} />}
+            <span className="social-btn-text">
+              {isCopied ? (lang === 'id' ? 'Tersalin!' : 'Copied!') : t.copyTextInfo}
+            </span>
           </button>
         </div>
       </div>

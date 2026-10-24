@@ -3661,6 +3661,40 @@ body {
     grid-template-columns: minmax(0, 1fr);
     gap: 8px;
   }
+
+  /* Ultra-small devices share modal */
+  .share-modal {
+    padding: 10px 12px calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+    gap: 8px !important;
+  }
+
+  .share-card-preview {
+    padding: 10px 12px !important;
+    gap: 8px !important;
+  }
+
+  .preview-city {
+    font-size: 1.15rem !important;
+  }
+
+  .preview-temp .num {
+    font-size: 2.1rem !important;
+  }
+
+  .preview-art {
+    width: 56px !important;
+    height: 56px !important;
+  }
+
+  .share-btn {
+    font-size: 0.76rem !important;
+    padding: 8px 10px !important;
+  }
+
+  .social-share-btn {
+    font-size: 0.7rem !important;
+    padding: 7px 4px !important;
+  }
 }
 
 /* ==========================================================================
@@ -4691,18 +4725,40 @@ body {
 
 /* Share Weather Modal */
 .share-modal {
-  max-width: 620px;
+  max-width: 560px;
+  padding: 20px 22px;
+  gap: 13px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(254, 240, 138, 0.3) rgba(15, 23, 42, 0.4);
+}
+
+.share-modal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.share-modal::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 8px;
+}
+
+.share-modal::-webkit-scrollbar-thumb {
+  background: rgba(254, 240, 138, 0.28);
+  border-radius: 8px;
+}
+
+.share-modal::-webkit-scrollbar-thumb:hover {
+  background: rgba(254, 240, 138, 0.5);
 }
 
 .share-card-preview {
   background: linear-gradient(145deg, rgba(15, 23, 42, 0.94) 0%, rgba(24, 20, 60, 0.82) 50%, rgba(15, 23, 42, 0.96) 100%);
   border: 1px solid rgba(254, 240, 138, 0.28);
   border-radius: var(--radius-lg);
-  padding: 24px;
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(254, 240, 138, 0.25);
+  gap: 11px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(254, 240, 138, 0.25);
   position: relative;
   overflow: hidden;
 }
@@ -4740,21 +4796,21 @@ body {
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid rgba(254, 240, 138, 0.16);
-  padding-bottom: 12px;
+  padding-bottom: 8px;
 }
 
 .preview-branding {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   font-weight: 700;
   color: #fef08a;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   letter-spacing: 0.4px;
 }
 
 .preview-date {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: #bae6fd;
   font-weight: 600;
 }
@@ -4763,7 +4819,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 14px;
 }
 
 .preview-info-col {
@@ -4773,11 +4829,12 @@ body {
 
 .preview-city {
   font-family: var(--font-heading);
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: #ffffff;
-  margin-bottom: 6px;
-  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+  letter-spacing: -0.4px;
+  line-height: 1.15;
 }
 
 .preview-pill {
@@ -4785,12 +4842,12 @@ body {
   background: rgba(254, 240, 138, 0.14);
   color: #fef08a;
   border: 1px solid rgba(254, 240, 138, 0.35);
-  padding: 4px 12px;
+  padding: 3px 10px;
   border-radius: var(--radius-full);
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.3px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .preview-temp {
@@ -4800,7 +4857,7 @@ body {
 
 .preview-temp .num {
   font-family: var(--font-heading);
-  font-size: 3.8rem;
+  font-size: 2.85rem;
   font-weight: 800;
   color: #ffffff;
   line-height: 1;
@@ -4808,67 +4865,110 @@ body {
 }
 
 .preview-temp .unit {
-  font-size: 1.8rem;
+  font-size: 1.45rem;
   font-weight: 700;
   color: #fef08a;
-  margin-top: 4px;
+  margin-top: 2px;
   margin-left: 2px;
 }
 
-.preview-feels {
-  font-size: 0.82rem;
+.preview-feels-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 0.78rem;
   color: var(--text-secondary);
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
-.preview-feels strong {
+.preview-feels-row strong {
   color: #ffffff;
 }
 
+.range-tag {
+  color: #bae6fd;
+  font-weight: 600;
+}
+
+.btn-label-mobile {
+  display: none;
+}
+
+.btn-label-desktop {
+  display: inline;
+}
+
 .preview-art {
+  width: 76px;
+  height: 76px;
   flex-shrink: 0;
-  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.4));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.4));
 }
 
 .preview-metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(254, 240, 138, 0.14);
   border-radius: var(--radius-md);
-  padding: 12px 14px;
+  padding: 8px 12px;
 }
 
 .p-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.8rem;
+  gap: 6px;
+  font-size: 0.76rem;
   color: #ffffff;
   font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Share Options Header */
+.share-options-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+  margin-bottom: -3px;
+}
+
+.share-options-title {
+  font-size: 0.73rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #bae6fd;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .share-actions-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1.35fr 1fr 1fr;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
 }
 
 .share-btn {
-  flex: 1;
-  min-width: 140px;
-  padding: 12px 16px;
+  padding: 10px 14px;
   border-radius: var(--radius-md);
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 7px;
   cursor: pointer;
   transition: var(--transition-smooth);
+  white-space: nowrap;
 }
 
 .share-btn.primary {
@@ -4906,20 +5006,19 @@ body {
 /* Quick Social & Direct Link Row */
 .share-social-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
   width: 100%;
-  margin-top: 2px;
 }
 
 .social-share-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 10px 12px;
+  gap: 5px;
+  padding: 8px 6px;
   border-radius: var(--radius-sm);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition-smooth);
@@ -4930,12 +5029,14 @@ body {
 }
 
 .social-share-btn .social-icon {
-  font-size: 0.95rem;
+  font-size: 0.88rem;
 }
 
 .social-share-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  background: rgba(24, 20, 60, 0.55);
+  border-color: rgba(254, 240, 138, 0.38);
 }
 
 .btn-whatsapp:hover {
@@ -4990,8 +5091,8 @@ body {
 }
 
 .preview-art {
-  width: clamp(75px, 20vw, 110px);
-  height: clamp(75px, 20vw, 110px);
+  width: 76px;
+  height: 76px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -5181,20 +5282,20 @@ body {
   }
 
   .share-modal {
-    max-width: 100%;
+    max-width: 520px;
   }
 
   .share-card-preview {
-    padding: 16px 14px;
-    gap: 14px;
+    padding: 15px 16px;
+    gap: 11px;
   }
 
   .preview-city {
-    font-size: clamp(1.3rem, 5vw, 1.8rem);
+    font-size: 1.35rem;
   }
 
   .preview-temp .num {
-    font-size: clamp(2.6rem, 10vw, 3.8rem);
+    font-size: 2.6rem;
   }
 }
 
@@ -5205,8 +5306,185 @@ body {
   .astronomy-card {
     grid-column: 1 / -1;
   }
+
+  /* Share Modal & Weather Card Mobile Refinements */
+  .share-modal {
+    max-width: 100% !important;
+    padding: 14px 16px calc(24px + env(safe-area-inset-bottom, 0px)) !important;
+    gap: 10px !important;
+    max-height: 90vh !important;
+  }
+
+  .share-card-preview {
+    padding: 13px 15px !important;
+    gap: 10px !important;
+    border-radius: 18px !important;
+  }
+
+  .preview-top {
+    padding-bottom: 7px !important;
+  }
+
+  .preview-branding {
+    font-size: 0.82rem !important;
+    gap: 5px !important;
+  }
+
+  .preview-date {
+    font-size: 0.72rem !important;
+    max-width: 58% !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    text-align: right !important;
+  }
+
+  .preview-center {
+    gap: 10px !important;
+  }
+
+  .preview-city {
+    font-size: 1.25rem !important;
+    margin-bottom: 2px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .preview-pill {
+    padding: 2.5px 8px !important;
+    font-size: 0.7rem !important;
+    margin-bottom: 3px !important;
+    max-width: 100% !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .preview-temp .num {
+    font-size: 2.35rem !important;
+  }
+
+  .preview-temp .unit {
+    font-size: 1.15rem !important;
+  }
+
+  .preview-feels-row {
+    font-size: 0.72rem !important;
+    gap: 4px !important;
+    margin-top: 3px !important;
+    line-height: 1.25 !important;
+  }
+
+  .preview-art {
+    width: 64px !important;
+    height: 64px !important;
+    flex-shrink: 0 !important;
+  }
+
   .preview-metrics {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px 10px !important;
+    padding: 8px 10px !important;
+  }
+
+  .p-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 5px 8px !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(254, 240, 138, 0.1) !important;
+    border-radius: 8px !important;
+    min-width: 0 !important;
+  }
+
+  .p-item span {
+    font-size: 0.73rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .p-item svg {
+    flex-shrink: 0 !important;
+  }
+
+  .share-options-header {
+    margin-top: 1px !important;
+    margin-bottom: -4px !important;
+  }
+
+  .share-options-title {
+    font-size: 0.7rem !important;
+    letter-spacing: 0.6px !important;
+  }
+
+  .share-actions-row {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+
+  .share-btn.primary {
+    grid-column: 1 / -1 !important;
+    padding: 11px 14px !important;
+    font-size: 0.85rem !important;
+  }
+
+  .share-btn.secondary {
+    padding: 9px 12px !important;
+    font-size: 0.79rem !important;
+    min-width: 0 !important;
+  }
+
+  .btn-label-desktop {
+    display: none !important;
+  }
+
+  .btn-label-mobile {
+    display: inline !important;
+  }
+
+  /* 6-column balanced symmetrical social row */
+  .share-social-row {
+    display: grid !important;
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+
+  .share-social-row .btn-whatsapp {
+    grid-column: span 2 !important;
+  }
+
+  .share-social-row .btn-telegram {
+    grid-column: span 2 !important;
+  }
+
+  .share-social-row .btn-twitter {
+    grid-column: span 2 !important;
+  }
+
+  .share-social-row .btn-copy-link {
+    grid-column: span 3 !important;
+  }
+
+  .share-social-row .btn-copy-text {
+    grid-column: span 3 !important;
+  }
+
+  .social-share-btn {
+    padding: 8px 6px !important;
+    font-size: 0.73rem !important;
+    gap: 5px !important;
+    min-width: 0 !important;
+  }
+
+  .social-share-btn .social-btn-text {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
   .lifestyle-grid,
   .advisor-grid {
