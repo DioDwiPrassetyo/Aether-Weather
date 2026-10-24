@@ -4204,12 +4204,29 @@ body {
   letter-spacing: 0.5px;
 }
 
-.compare-nav-btn {
+.compare-nav-btn,
+.share-nav-btn {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 0 12px;
   width: auto;
+}
+
+.compare-nav-btn svg,
+.share-nav-btn svg {
+  flex-shrink: 0;
+}
+
+.share-nav-btn {
+  color: #fef08a;
+  border-color: rgba(254, 240, 138, 0.3);
+}
+
+.share-nav-btn:hover {
+  background: rgba(254, 240, 138, 0.14);
+  border-color: rgba(254, 240, 138, 0.5);
+  color: #ffffff;
 }
 
 .control-btn-text {
@@ -4221,7 +4238,8 @@ body {
   .control-btn-text {
     display: none;
   }
-  .compare-nav-btn {
+  .compare-nav-btn,
+  .share-nav-btn {
     padding: 0;
     width: 38px;
     height: 38px;
@@ -5244,7 +5262,8 @@ body {
     display: none !important;
   }
 
-  .compare-nav-btn {
+  .compare-nav-btn,
+  .share-nav-btn {
     width: 36px !important;
     height: 36px !important;
     min-width: 36px !important;
