@@ -153,11 +153,24 @@ export const ExtremeWeatherAlert: React.FC<ExtremeWeatherAlertProps> = ({
 
   return (
     <div className={`weather-alert-banner alert-${topAlert.type}`}>
+      <button
+        className="alert-btn-dismiss"
+        onClick={() => setDismissed((prev) => [...prev, topAlert.id])}
+        title={lang === 'id' ? 'Tutup Peringatan' : 'Dismiss Alert'}
+      >
+        <X size={16} />
+      </button>
+
       <div className="alert-content-wrapper">
         <div className="alert-icon-wrap">{topAlert.icon}</div>
         <div className="alert-text-group">
           <div className="alert-header-row">
             <span className="alert-title">{topAlert.title}</span>
+            <span className="alert-type-badge">
+              {topAlert.type === 'danger'
+                ? (lang === 'id' ? 'BAHAYA' : 'DANGER')
+                : (lang === 'id' ? 'WASPADA' : 'WARNING')}
+            </span>
             {activeAlerts.length > 1 && (
               <span className="alert-badge-count">
                 +{activeAlerts.length - 1} {lang === 'id' ? 'peringatan lainnya' : 'more alerts'}
@@ -165,6 +178,29 @@ export const ExtremeWeatherAlert: React.FC<ExtremeWeatherAlertProps> = ({
             )}
           </div>
           <p className="alert-desc">{topAlert.message}</p>
+
+          {/* Actionable Health/Safety Chips */}
+          <div className="alert-advice-chips">
+            {topAlert.id === 'extreme-heat' && (
+              <>
+                <span className="advice-chip">💧 {lang === 'id' ? 'Perbanyak Minum Air' : 'Drink Water'}</span>
+                <span className="advice-chip">🧢 {lang === 'id' ? 'Gunakan Payung / Topi' : 'Use Sun Hat'}</span>
+                <span className="advice-chip">🧴 {lang === 'id' ? 'Pakai Tabir Surya' : 'Apply Sunscreen'}</span>
+              </>
+            )}
+            {topAlert.id === 'thunderstorm' && (
+              <>
+                <span className="advice-chip">⚡ {lang === 'id' ? 'Jauhi Pohon Tinggi' : 'Avoid Tall Trees'}</span>
+                <span className="advice-chip">🏠 {lang === 'id' ? 'Berlindung di Dalam' : 'Stay Indoors'}</span>
+              </>
+            )}
+            {topAlert.id === 'heavy-rain' && (
+              <>
+                <span className="advice-chip">☂️ {lang === 'id' ? 'Siapkan Jas Hujan' : 'Rain Gear Ready'}</span>
+                <span className="advice-chip">🚗 {lang === 'id' ? 'Waspadai Genangan' : 'Drive Safely'}</span>
+              </>
+            )}
+          </div>
 
           {isExpanded && activeAlerts.length > 1 && (
             <div className="alert-expanded-list">
@@ -182,8 +218,8 @@ export const ExtremeWeatherAlert: React.FC<ExtremeWeatherAlertProps> = ({
         </div>
       </div>
 
-      <div className="alert-actions">
-        {activeAlerts.length > 1 && (
+      {activeAlerts.length > 1 && (
+        <div className="alert-actions">
           <button
             className="alert-btn-toggle"
             onClick={() => setIsExpanded(!isExpanded)}
@@ -197,15 +233,8 @@ export const ExtremeWeatherAlert: React.FC<ExtremeWeatherAlertProps> = ({
               }}
             />
           </button>
-        )}
-        <button
-          className="alert-btn-dismiss"
-          onClick={() => setDismissed((prev) => [...prev, topAlert.id])}
-          title={lang === 'id' ? 'Tutup Peringatan' : 'Dismiss Alert'}
-        >
-          <X size={16} />
-        </button>
-      </div>
+        </div>
+      )}
     </div>
   );
 };

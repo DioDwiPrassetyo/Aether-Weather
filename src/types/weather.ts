@@ -134,7 +134,14 @@ export interface FavoriteLocation {
 
 export type UnitType = 'metric' | 'imperial';
 
+export type TimeOfDay = 'pagi' | 'siang' | 'sore' | 'malam';
+export type ThemeMode = 'auto' | 'pagi' | 'siang' | 'sore' | 'malam';
+
 export type WeatherTheme =
+  | 'pagi'
+  | 'siang'
+  | 'sore'
+  | 'malam'
   | 'clear-day'
   | 'clear-night'
   | 'clouds-day'

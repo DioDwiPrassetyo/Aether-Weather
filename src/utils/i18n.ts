@@ -20,9 +20,15 @@ export interface Translations {
   notificationsEnabled: string;
   notificationsDenied: string;
 
-  // Quick Chips
+  // Quick Chips & Theme
   popularCities: string;
   savedFavorites: string;
+  timeTheme: string;
+  themeAuto: string;
+  themePagi: string;
+  themeSiang: string;
+  themeSore: string;
+  themeMalam: string;
 
   // Hero Card
   feelsLike: string;
@@ -134,6 +140,7 @@ export interface Translations {
   outdoorSports: string;
   sunscreenProtection: string;
   airHealth: string;
+  commuteRoadSafety: string;
 
   // Extreme Hazard Alert
   hazardAlertTitle: string;
@@ -167,8 +174,13 @@ export interface Translations {
   shareSubtitle: string;
   downloadImage: string;
   shareToApps: string;
+  copyImage: string;
   copyTextInfo: string;
   copyLink: string;
+  shareWhatsApp: string;
+  shareTelegram: string;
+  shareTwitter: string;
+  imageCopiedToast: string;
   linkCopiedToast: string;
   textCopiedToast: string;
   downloadSuccessToast: string;
@@ -217,6 +229,12 @@ export const DICTIONARIES: Record<Language, Translations> = {
 
     popularCities: 'Kota Populer',
     savedFavorites: 'Kota Favorit',
+    timeTheme: 'Tema Waktu',
+    themeAuto: 'Otomatis',
+    themePagi: 'Pagi',
+    themeSiang: 'Siang',
+    themeSore: 'Sore',
+    themeMalam: 'Malam',
 
     feelsLike: 'Terasa seperti',
     tempHigh: 'Tertinggi',
@@ -330,11 +348,12 @@ export const DICTIONARIES: Record<Language, Translations> = {
     mosquitoHigh: 'Meningkat (Lembap & Hangat)',
 
     advisorTitle: 'Rekomendasi Cerdas Aktivitas',
-    outfitSuggestion: 'Rekomendasi Busana',
-    umbrellaSuggestion: 'Payung & Jas Hujan',
-    outdoorSports: 'Olahraga Luar Ruangan',
-    sunscreenProtection: 'Perlindungan Sinar UV',
-    airHealth: 'Kesehatan Pernapasan',
+    outfitSuggestion: 'Pakaian & Busana',
+    umbrellaSuggestion: 'Payung & Hujan',
+    outdoorSports: 'Aktivitas Luar',
+    sunscreenProtection: 'Perlindungan UV',
+    airHealth: 'Kesehatan Udara',
+    commuteRoadSafety: 'Kondisi Jalan',
 
     hazardAlertTitle: 'Peringatan Dini Cuaca & Bahaya',
     hazardSafeTitle: 'Kondisi Atmosfer Terpantau Aman',
@@ -364,8 +383,13 @@ export const DICTIONARIES: Record<Language, Translations> = {
     shareSubtitle: 'Unduh kartu cuaca atau bagikan ke media sosial',
     downloadImage: 'Unduh Gambar (PNG)',
     shareToApps: 'Bagikan ke Aplikasi',
-    copyTextInfo: 'Salin Ringkasan Teks',
-    copyLink: 'Salin Tautan Cuaca',
+    copyImage: 'Salin Gambar',
+    copyTextInfo: 'Salin Teks',
+    copyLink: 'Salin Tautan',
+    shareWhatsApp: 'WhatsApp',
+    shareTelegram: 'Telegram',
+    shareTwitter: 'X / Twitter',
+    imageCopiedToast: 'Gambar kartu cuaca berhasil disalin ke clipboard!',
     linkCopiedToast: 'Tautan cuaca kota berhasil disalin!',
     textCopiedToast: 'Info ringkasan cuaca berhasil disalin ke clipboard!',
     downloadSuccessToast: 'Kartu cuaca berhasil diunduh.',
@@ -452,6 +476,12 @@ export const DICTIONARIES: Record<Language, Translations> = {
 
     popularCities: 'Popular Cities',
     savedFavorites: 'Favorite Cities',
+    timeTheme: 'Time Theme',
+    themeAuto: 'Auto',
+    themePagi: 'Morning',
+    themeSiang: 'Day',
+    themeSore: 'Evening',
+    themeMalam: 'Night',
 
     feelsLike: 'Feels like',
     tempHigh: 'High',
@@ -565,11 +595,12 @@ export const DICTIONARIES: Record<Language, Translations> = {
     mosquitoHigh: 'Elevated (Warm & Humid)',
 
     advisorTitle: 'Smart Activity Advisor',
-    outfitSuggestion: 'Clothing Suggestion',
-    umbrellaSuggestion: 'Umbrella & Rain Gear',
-    outdoorSports: 'Outdoor Activities',
-    sunscreenProtection: 'UV Protection',
-    airHealth: 'Respiratory Health',
+    outfitSuggestion: 'Outfit & Clothing',
+    umbrellaSuggestion: 'Umbrella & Rain',
+    outdoorSports: 'Outdoor Activity',
+    sunscreenProtection: 'Sun & UV Shield',
+    airHealth: 'Air & Respiration',
+    commuteRoadSafety: 'Road & Commute',
 
     hazardAlertTitle: 'Severe Weather Alert',
     hazardSafeTitle: 'Atmospheric Conditions Normal',
@@ -599,8 +630,13 @@ export const DICTIONARIES: Record<Language, Translations> = {
     shareSubtitle: 'Download weather card or share to social media',
     downloadImage: 'Download Image (PNG)',
     shareToApps: 'Share via Apps',
-    copyTextInfo: 'Copy Weather Summary',
-    copyLink: 'Copy City Link',
+    copyImage: 'Copy Image',
+    copyTextInfo: 'Copy Text',
+    copyLink: 'Copy Link',
+    shareWhatsApp: 'WhatsApp',
+    shareTelegram: 'Telegram',
+    shareTwitter: 'X / Twitter',
+    imageCopiedToast: 'Weather card image copied to clipboard!',
     linkCopiedToast: 'Weather shareable link copied!',
     textCopiedToast: 'Weather summary copied to clipboard!',
     downloadSuccessToast: 'Weather card image downloaded.',

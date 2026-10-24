@@ -142,7 +142,7 @@ export const LifestyleIndexes: React.FC<LifestyleIndexesProps> = ({
         </div>
 
         {/* Item 2: Running Comfort Score */}
-        <div className="lifestyle-item">
+        <div className={`lifestyle-item ${runScore >= 75 ? 'status-optimal' : runScore >= 50 ? 'status-caution' : 'status-hazard'}`}>
           <div className="lifestyle-item-header">
             <span className="lifestyle-cat">
               <Footprints size={16} color="#f59e0b" /> {t.runningScore}
@@ -174,7 +174,7 @@ export const LifestyleIndexes: React.FC<LifestyleIndexesProps> = ({
         </div>
 
         {/* Item 3: Flu Sensitivity */}
-        <div className="lifestyle-item">
+        <div className={`lifestyle-item ${isFluHigh ? 'status-caution' : 'status-optimal'}`}>
           <div className="lifestyle-item-header">
             <span className="lifestyle-cat">
               <ThermometerSnowflake size={16} color="#c084fc" /> {t.fluRisk}
@@ -196,7 +196,7 @@ export const LifestyleIndexes: React.FC<LifestyleIndexesProps> = ({
         </div>
 
         {/* Item 4: Mosquito Activity */}
-        <div className="lifestyle-item">
+        <div className={`lifestyle-item ${isMosquitoHigh ? 'status-caution' : 'status-optimal'}`}>
           <div className="lifestyle-item-header">
             <span className="lifestyle-cat">
               <Bug size={16} color="#fb923c" /> {t.mosquitoActivity}

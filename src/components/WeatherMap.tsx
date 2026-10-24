@@ -143,6 +143,11 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
       setTimeout(() => {
         if (mapRef.current) {
           mapRef.current.invalidateSize();
+          if (next) {
+            mapRef.current.scrollWheelZoom?.enable();
+          } else {
+            mapRef.current.scrollWheelZoom?.disable();
+          }
         }
       }, 200);
       return next;
@@ -170,6 +175,7 @@ export const WeatherMap: React.FC<WeatherMapProps> = ({
         minZoom: 3,
         maxZoom: 18,
         zoomControl: false,
+        scrollWheelZoom: false,
       });
 
       L.control.zoom({ position: 'topright' }).addTo(map);

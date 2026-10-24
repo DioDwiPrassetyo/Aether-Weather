@@ -139,8 +139,27 @@
             this.ctx = DOM.canvas.getContext('2d');
             this.resize();
             window.addEventListener('resize', () => this.resize());
+            
+            // Reduced motion & tab visibility handling
+            this.prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            this.isRunning = true;
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    this.isRunning = false;
+                    if (this.animationId) cancelAnimationFrame(this.animationId);
+                } else {
+                    if (!this.isRunning && !this.prefersReducedMotion) {
+                        this.isRunning = true;
+                        this.loop();
+                    }
+                }
+            });
+
             this.setEffect('clear-day');
-            this.loop();
+            if (!this.prefersReducedMotion) {
+                this.loop();
+            }
         },
 
         resize() {
@@ -175,7 +194,7 @@
                         opacity: 0.3 + Math.random() * 0.6
                     });
                 }
-            } else if (theme === 'clear-night' || theme === 'clouds-night') {
+            } else if (theme === 'clear-night' || theme === 'clouds-night' || theme === 'malam') {
                 for (let i = 0; i < count; i++) {
                     this.particles.push({
                         x: Math.random() * this.width,
@@ -185,8 +204,34 @@
                         alphaSpeed: 0.01 + Math.random() * 0.02
                     });
                 }
+            } else if (theme === 'pagi') {
+                // Fajar / Sunrise: floating golden dawn motes rising gently
+                for (let i = 0; i < (this.width < 768 ? 30 : 60); i++) {
+                    this.particles.push({
+                        x: Math.random() * this.width,
+                        y: Math.random() * this.height,
+                        radius: 1 + Math.random() * 2.2,
+                        speedY: -0.3 - Math.random() * 0.5,
+                        speedX: (Math.random() - 0.5) * 0.4,
+                        alpha: 0.2 + Math.random() * 0.5,
+                        pulse: Math.random() * Math.PI
+                    });
+                }
+            } else if (theme === 'sore') {
+                // Senja / Sunset: warm ember specks drifting horizontally
+                for (let i = 0; i < (this.width < 768 ? 35 : 70); i++) {
+                    this.particles.push({
+                        x: Math.random() * this.width,
+                        y: Math.random() * this.height,
+                        radius: 1.2 + Math.random() * 2.4,
+                        speedY: -0.2 - Math.random() * 0.35,
+                        speedX: 0.2 + Math.random() * 0.5,
+                        alpha: 0.3 + Math.random() * 0.5,
+                        pulse: Math.random() * Math.PI
+                    });
+                }
             } else {
-                // Clear Day / Clouds Day: gentle golden ambient motes
+                // Siang / Clear Day / Clouds Day: gentle golden ambient motes
                 for (let i = 0; i < 35; i++) {
                     this.particles.push({
                         x: Math.random() * this.width,
@@ -238,7 +283,7 @@
                         p.x = Math.random() * this.width;
                     }
                 }
-            } else if (this.currentType === 'clear-night' || this.currentType === 'clouds-night') {
+            } else if (this.currentType === 'clear-night' || this.currentType === 'clouds-night' || this.currentType === 'malam') {
                 for (const p of this.particles) {
                     p.alpha += p.alphaSpeed;
                     if (p.alpha > 1 || p.alpha < 0.2) p.alphaSpeed = -p.alphaSpeed;
@@ -246,6 +291,36 @@
                     this.ctx.beginPath();
                     this.ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
                     this.ctx.fill();
+                }
+            } else if (this.currentType === 'pagi') {
+                for (const p of this.particles) {
+                    p.pulse += 0.03;
+                    const currentAlpha = Math.max(0.1, p.alpha * (0.7 + 0.3 * Math.sin(p.pulse)));
+                    this.ctx.fillStyle = `rgba(253, 224, 71, ${currentAlpha})`;
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    p.y += p.speedY;
+                    p.x += p.speedX;
+                    if (p.y < 0) {
+                        p.y = this.height + 5;
+                        p.x = Math.random() * this.width;
+                    }
+                }
+            } else if (this.currentType === 'sore') {
+                for (const p of this.particles) {
+                    p.pulse += 0.025;
+                    const currentAlpha = Math.max(0.1, p.alpha * (0.6 + 0.4 * Math.sin(p.pulse)));
+                    this.ctx.fillStyle = `rgba(251, 146, 60, ${currentAlpha})`;
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    p.y += p.speedY;
+                    p.x += p.speedX;
+                    if (p.y < 0) {
+                        p.y = this.height + 5;
+                        p.x = Math.random() * this.width;
+                    }
                 }
             } else {
                 // Clear day ambient floaters
@@ -263,7 +338,9 @@
                 }
             }
 
-            this.animationId = requestAnimationFrame(() => this.loop());
+            if (this.isRunning && !this.prefersReducedMotion) {
+                this.animationId = requestAnimationFrame(() => this.loop());
+            }
         }
     };
 
@@ -509,10 +586,27 @@
     }
 
     // =========================================================================
-    // THEME & ATMOSPHERE UPDATER
+    // THEME & ATMOSPHERE UPDATER (Pagi, Siang, Sore, Malam & Weather Matrix)
     // =========================================================================
-    function updateTheme(weatherCode, isNight) {
-        let theme = 'clear-day';
+    function getTimeOfDay(localHour) {
+        if (localHour >= 5 && localHour < 11) return 'pagi';
+        if (localHour >= 11 && localHour < 15) return 'siang';
+        if (localHour >= 15 && localHour < 19) return 'sore';
+        return 'malam';
+    }
+
+    function updateTheme(weatherCode, isNight, timezoneSeconds) {
+        // Automatically determine city local hour from timezone offset
+        let localHour = new Date().getHours();
+        if (timezoneSeconds !== undefined && timezoneSeconds !== null) {
+            const nowUtc = Date.now() + (new Date().getTimezoneOffset() * 60000);
+            const cityTime = new Date(nowUtc + (timezoneSeconds * 1000));
+            localHour = cityTime.getHours();
+        }
+
+        const timeOfDay = getTimeOfDay(localHour);
+
+        let theme = timeOfDay;
 
         if (weatherCode >= 200 && weatherCode < 300) {
             theme = 'thunderstorm';
@@ -522,10 +616,8 @@
             theme = 'snow';
         } else if (weatherCode >= 700 && weatherCode < 800) {
             theme = 'mist';
-        } else if (weatherCode === 800) {
-            theme = isNight ? 'clear-night' : 'clear-day';
-        } else if (weatherCode > 800) {
-            theme = isNight ? 'clouds-night' : 'clouds-day';
+        } else {
+            theme = timeOfDay;
         }
 
         DOM.body.setAttribute('data-theme', theme);
@@ -550,12 +642,18 @@
 
             DOM.clockText.textContent = `${hours}:${minutes}:${seconds}`;
 
+            const h = cityTime.getHours();
+            let periodText = '🌙 Malam';
+            if (h >= 5 && h < 11) periodText = '🌅 Pagi';
+            else if (h >= 11 && h < 15) periodText = '☀️ Siang';
+            else if (h >= 15 && h < 19) periodText = '🌇 Sore';
+
             const dayName = I18N.days[cityTime.getDay()];
             const dateNum = cityTime.getDate();
             const monthName = I18N.months[cityTime.getMonth()];
             const yearNum = cityTime.getFullYear();
 
-            DOM.dateText.textContent = `${dayName}, ${dateNum} ${monthName} ${yearNum}`;
+            DOM.dateText.textContent = `${dayName}, ${dateNum} ${monthName} ${yearNum} • ${periodText}`;
         };
 
         updateTime();
@@ -581,7 +679,7 @@
         const speedUnit = state.unit === 'metric' ? 'km/j' : 'mph';
 
         // 1. Dynamic Theme & Background
-        updateTheme(weather.id, isNight);
+        updateTheme(weather.id, isNight, current.timezone);
 
         // 2. Local Time Clock
         startLocalClock(current.timezone);

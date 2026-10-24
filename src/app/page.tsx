@@ -71,7 +71,7 @@ const STORAGE_KEYS = {
 export default function WeatherPage() {
   const [unit, setUnit] = useState<UnitType>('metric');
   const [lang, setLang] = useState<Language>('id');
-  const [theme, setTheme] = useState<WeatherTheme>('clear-day');
+  const [theme, setTheme] = useState<WeatherTheme>('siang');
   const [currentWeather, setCurrentWeather] = useState<CurrentWeatherResponse | null>(null);
   const [forecast, setForecast] = useState<ForecastResponse | null>(null);
   const [airPollution, setAirPollution] = useState<AirPollutionResponse | null>(null);
@@ -138,12 +138,16 @@ export default function WeatherPage() {
         setForecast(forecastRes);
         setAirPollution(pollutionRes);
 
+        // Always automatically adapt theme based on local time and weather conditions
+        const nowUtc = Date.now() + new Date().getTimezoneOffset() * 60000;
+        const cityTime = new Date(nowUtc + current.timezone * 1000);
+        const localHour = cityTime.getHours();
         const isNight = current.weather[0].icon.endsWith('n');
-        const nextTheme = getThemeFromWeather(current.weather[0].id, isNight);
-        setTheme(nextTheme);
+        const autoTheme = getThemeFromWeather(current.weather[0].id, isNight, localHour);
+        setTheme(autoTheme);
 
         if (typeof window !== 'undefined') {
-          document.body.setAttribute('data-theme', nextTheme);
+          document.body.setAttribute('data-theme', autoTheme);
           localStorage.setItem(STORAGE_KEYS.LAST_CITY, current.name);
 
           // Deep-link synchronization: update ?city= query parameter without reloading
@@ -172,7 +176,7 @@ export default function WeatherPage() {
               current,
               forecast: forecastRes,
               pollution: pollutionRes,
-              theme: nextTheme,
+              theme: autoTheme,
             })
           );
         }

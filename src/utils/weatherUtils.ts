@@ -5,6 +5,7 @@ import {
   GeocodingResult,
   UnitType,
   WeatherTheme,
+  TimeOfDay,
 } from '@/types/weather';
 
 export const API_KEY =
@@ -111,13 +112,28 @@ export async function searchGeocoding(query: string): Promise<GeocodingResult[]>
   return res.json();
 }
 
-export function getThemeFromWeather(weatherId: number, isNight: boolean): WeatherTheme {
+export function getTimeOfDay(localHour: number): TimeOfDay {
+  if (localHour >= 5 && localHour < 11) return 'pagi';
+  if (localHour >= 11 && localHour < 15) return 'siang';
+  if (localHour >= 15 && localHour < 19) return 'sore';
+  return 'malam';
+}
+
+export function getThemeFromWeather(
+  weatherId: number,
+  isNight: boolean,
+  localHour?: number
+): WeatherTheme {
   if (weatherId >= 200 && weatherId < 300) return 'thunderstorm';
   if (weatherId >= 300 && weatherId < 600) return 'rain';
   if (weatherId >= 600 && weatherId < 700) return 'snow';
   if (weatherId >= 700 && weatherId < 800) return 'mist';
-  if (weatherId === 800) return isNight ? 'clear-night' : 'clear-day';
-  return isNight ? 'clouds-night' : 'clouds-day';
+
+  if (localHour !== undefined) {
+    return getTimeOfDay(localHour);
+  }
+
+  return isNight ? 'malam' : 'siang';
 }
 
 export function getCardinalDirection(angle: number | undefined): string {
