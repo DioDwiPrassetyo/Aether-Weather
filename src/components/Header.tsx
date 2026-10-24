@@ -503,7 +503,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Share Button */}
         <button
-          className="control-btn share-nav-btn"
+          className="control-btn nav-card-export-btn"
           onClick={onOpenShare}
           title={t.shareWeather}
         >

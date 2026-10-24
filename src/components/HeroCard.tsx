@@ -130,14 +130,14 @@ export const HeroCard: React.FC<HeroCardProps> = ({
         <div className="hero-top-actions">
           {onOpenShare && (
             <button
-              className="hero-share-action-btn"
+              className="hero-card-export-btn"
               onClick={onOpenShare}
               title={lang === 'id' ? 'Bagikan & Unduh Kartu Cuaca' : 'Share & Download Weather Card'}
               aria-label={lang === 'id' ? 'Bagikan & Unduh Kartu Cuaca' : 'Share & Download Weather Card'}
-              id="hero-share-btn"
+              id="hero-card-export-action"
             >
               <Share2 size={15} />
-              <span className="hero-share-btn-text">
+              <span className="hero-export-label">
                 {lang === 'id' ? 'Bagikan & Unduh' : 'Share & Download'}
               </span>
             </button>

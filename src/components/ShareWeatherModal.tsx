@@ -904,10 +904,9 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
-        className="glass-card modal-container share-modal"
+        className="glass-card modal-container aether-card-modal"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         {/* Header */}
         <div className="modal-header">
           <div>
@@ -923,28 +922,28 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
         <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
 
         {/* 1. Primary Download & Share Options - ALWAYS VISIBLE FIRST! */}
-        <div className="share-actions-section">
-          <div className="share-options-header">
-            <span className="share-options-title">
+        <div className="aether-export-deck">
+          <div className="aether-deck-header">
+            <span className="aether-deck-title">
               {lang === 'id' ? '✦ OPSI UNDUH & BAGIKAN' : '✦ DOWNLOAD & SHARE OPTIONS'}
             </span>
           </div>
 
           {/* Primary Action Buttons */}
-          <div className="share-actions-row">
+          <div className="aether-action-grid">
             <button
-              className="share-btn primary"
+              className="aether-action-btn primary"
               onClick={handleDownloadImage}
               disabled={isGenerating}
               title={t.downloadImage}
-              id="btn-download-weather-card"
+              id="btn-save-weather-image"
             >
               <Download size={18} />
               <span>{isGenerating ? (lang === 'id' ? 'Memproses...' : 'Processing...') : t.downloadImage}</span>
             </button>
 
             <button
-              className="share-btn secondary"
+              className="aether-action-btn secondary"
               onClick={handleCopyImage}
               disabled={isGenerating}
               title={t.copyImage}
@@ -959,7 +958,7 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
             </button>
 
             <button
-              className="share-btn secondary"
+              className="aether-action-btn secondary"
               onClick={handleNativeShare}
               disabled={isGenerating}
               title={t.shareToApps}
@@ -970,37 +969,37 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
             </button>
           </div>
 
-          {/* Quick Social & Link Share Row */}
-          <div className="share-social-row">
+          {/* Quick Channels & Link Share Row */}
+          <div className="aether-channels-grid">
             <button
-              className="social-share-btn btn-whatsapp"
+              className="aether-channel-button channel-wa"
               onClick={handleShareWhatsApp}
               title="Bagikan ke WhatsApp"
             >
-              <span className="social-icon">💬</span>
-              <span className="social-btn-text">WhatsApp</span>
+              <span className="channel-icon">💬</span>
+              <span className="channel-label">WhatsApp</span>
             </button>
 
             <button
-              className="social-share-btn btn-telegram"
+              className="aether-channel-button channel-tg"
               onClick={handleShareTelegram}
               title="Bagikan ke Telegram"
             >
-              <span className="social-icon">✈️</span>
-              <span className="social-btn-text">Telegram</span>
+              <span className="channel-icon">✈️</span>
+              <span className="channel-label">Telegram</span>
             </button>
 
             <button
-              className="social-share-btn btn-twitter"
+              className="aether-channel-button channel-x"
               onClick={handleShareTwitter}
               title="Bagikan ke X / Twitter"
             >
-              <span className="social-icon">✦</span>
-              <span className="social-btn-text">X / Twitter</span>
+              <span className="channel-icon">✦</span>
+              <span className="channel-label">X / Twitter</span>
             </button>
 
             <button
-              className="social-share-btn btn-copy-link"
+              className="aether-channel-button channel-url"
               onClick={handleCopyLink}
               title={t.copyLink}
             >
@@ -1009,18 +1008,18 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
               ) : (
                 <Link2 size={15} color="#38bdf8" />
               )}
-              <span className="social-btn-text">
+              <span className="channel-label">
                 {isLinkCopied ? (lang === 'id' ? 'Tersalin!' : 'Copied!') : t.copyLink}
               </span>
             </button>
 
             <button
-              className="social-share-btn btn-copy-text"
+              className="aether-channel-button channel-summary"
               onClick={handleCopyText}
               title={t.copyTextInfo}
             >
               {isCopied ? <Check size={15} color="#4ade80" /> : <Copy size={15} />}
-              <span className="social-btn-text">
+              <span className="channel-label">
                 {isCopied ? (lang === 'id' ? 'Tersalin!' : 'Copied!') : t.copyTextInfo}
               </span>
             </button>
@@ -1028,14 +1027,14 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
         </div>
 
         {/* 2. Visual Card Preview Header & Preview Card */}
-        <div className="share-preview-header">
-          <span className="share-preview-title">
+        <div className="aether-preview-deck-header">
+          <span className="aether-preview-deck-title">
             {lang === 'id' ? '✦ PRATINJAU KARTU CUACA' : '✦ LIVE CARD PREVIEW'}
           </span>
         </div>
 
         {/* Live Visual Card Preview (Celestial Astronomy Theme) */}
-        <div className="share-card-preview">
+        <div className="aether-rendered-card-preview">
           <div className="preview-top">
             <div className="preview-branding">
               <CloudSun size={18} color="#fef08a" />

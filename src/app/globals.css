@@ -3663,12 +3663,12 @@ body {
   }
 
   /* Ultra-small devices share modal */
-  .share-modal {
+  .aether-card-modal {
     padding: 10px 12px calc(20px + env(safe-area-inset-bottom, 0px)) !important;
     gap: 8px !important;
   }
 
-  .share-card-preview {
+  .aether-rendered-card-preview {
     padding: 10px 12px !important;
     gap: 8px !important;
   }
@@ -3686,12 +3686,12 @@ body {
     height: 56px !important;
   }
 
-  .share-btn {
+  .aether-action-btn {
     font-size: 0.76rem !important;
     padding: 8px 10px !important;
   }
 
-  .social-share-btn {
+  .aether-channel-button {
     font-size: 0.7rem !important;
     padding: 7px 4px !important;
   }
@@ -4205,7 +4205,7 @@ body {
 }
 
 .compare-nav-btn,
-.share-nav-btn {
+.nav-card-export-btn {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -4214,16 +4214,16 @@ body {
 }
 
 .compare-nav-btn svg,
-.share-nav-btn svg {
+.nav-card-export-btn svg {
   flex-shrink: 0;
 }
 
-.share-nav-btn {
+.nav-card-export-btn {
   color: #fef08a;
   border-color: rgba(254, 240, 138, 0.3);
 }
 
-.share-nav-btn:hover {
+.nav-card-export-btn:hover {
   background: rgba(254, 240, 138, 0.14);
   border-color: rgba(254, 240, 138, 0.5);
   color: #ffffff;
@@ -4239,7 +4239,7 @@ body {
     display: none;
   }
   .compare-nav-btn,
-  .share-nav-btn {
+  .nav-card-export-btn {
     padding: 0;
     width: 38px;
     height: 38px;
@@ -4253,7 +4253,7 @@ body {
   gap: 8px;
 }
 
-.hero-share-action-btn {
+.hero-card-export-btn {
   background: linear-gradient(135deg, rgba(254, 240, 138, 0.16) 0%, rgba(56, 189, 248, 0.12) 100%);
   border: 1px solid rgba(254, 240, 138, 0.35);
   color: #fef08a;
@@ -4273,7 +4273,7 @@ body {
   letter-spacing: 0.2px;
 }
 
-.hero-share-action-btn:hover {
+.hero-card-export-btn:hover {
   background: linear-gradient(135deg, rgba(254, 240, 138, 0.28) 0%, rgba(56, 189, 248, 0.24) 100%);
   border-color: #fef08a;
   color: #ffffff;
@@ -4746,8 +4746,8 @@ body {
   color: var(--text-muted);
 }
 
-/* Share Weather Modal */
-.share-modal {
+/* Weather Card Export Modal */
+.aether-card-modal {
   max-width: 560px;
   padding: 20px 22px;
   gap: 13px;
@@ -4755,25 +4755,25 @@ body {
   scrollbar-color: rgba(254, 240, 138, 0.3) rgba(15, 23, 42, 0.4);
 }
 
-.share-modal::-webkit-scrollbar {
+.aether-card-modal::-webkit-scrollbar {
   width: 6px;
 }
 
-.share-modal::-webkit-scrollbar-track {
+.aether-card-modal::-webkit-scrollbar-track {
   background: rgba(15, 23, 42, 0.4);
   border-radius: 8px;
 }
 
-.share-modal::-webkit-scrollbar-thumb {
+.aether-card-modal::-webkit-scrollbar-thumb {
   background: rgba(254, 240, 138, 0.28);
   border-radius: 8px;
 }
 
-.share-modal::-webkit-scrollbar-thumb:hover {
+.aether-card-modal::-webkit-scrollbar-thumb:hover {
   background: rgba(254, 240, 138, 0.5);
 }
 
-.share-card-preview {
+.aether-rendered-card-preview {
   background: linear-gradient(145deg, rgba(15, 23, 42, 0.94) 0%, rgba(24, 20, 60, 0.82) 50%, rgba(15, 23, 42, 0.96) 100%);
   border: 1px solid rgba(254, 240, 138, 0.28);
   border-radius: var(--radius-lg);
@@ -4786,7 +4786,7 @@ body {
   overflow: hidden;
 }
 
-.share-card-preview::before {
+.aether-rendered-card-preview::before {
   content: '';
   position: absolute;
   top: -40px;
@@ -4798,7 +4798,7 @@ body {
   filter: blur(10px);
 }
 
-.share-card-preview::after {
+.aether-rendered-card-preview::after {
   content: '';
   position: absolute;
   bottom: -50px;
@@ -4809,7 +4809,7 @@ body {
   pointer-events: none;
 }
 
-.share-card-preview > * {
+.aether-rendered-card-preview > * {
   position: relative;
   z-index: 1;
 }
@@ -4952,16 +4952,16 @@ body {
   white-space: nowrap;
 }
 
-/* Share Actions Section */
-.share-actions-section {
+/* Card Export Actions Deck */
+.aether-export-deck {
   display: flex;
   flex-direction: column;
   gap: 10px;
   width: 100%;
 }
 
-/* Share Options Header */
-.share-options-header {
+/* Deck Header */
+.aether-deck-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -4969,7 +4969,7 @@ body {
   margin-bottom: -3px;
 }
 
-.share-options-title {
+.aether-deck-title {
   font-size: 0.73rem;
   font-weight: 700;
   letter-spacing: 0.8px;
@@ -4980,8 +4980,8 @@ body {
   gap: 5px;
 }
 
-/* Share Preview Header */
-.share-preview-header {
+/* Card Preview Tagline Header */
+.aether-preview-deck-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -4989,7 +4989,7 @@ body {
   margin-bottom: -3px;
 }
 
-.share-preview-title {
+.aether-preview-deck-title {
   font-size: 0.73rem;
   font-weight: 700;
   letter-spacing: 0.8px;
@@ -5000,7 +5000,7 @@ body {
   gap: 5px;
 }
 
-.share-actions-row {
+.aether-action-grid {
   display: grid;
   grid-template-columns: 1.35fr 1fr 1fr;
   align-items: center;
@@ -5008,7 +5008,7 @@ body {
   width: 100%;
 }
 
-.share-btn {
+.aether-action-btn {
   padding: 10px 14px;
   border-radius: var(--radius-md);
   font-size: 0.84rem;
@@ -5022,47 +5022,47 @@ body {
   white-space: nowrap;
 }
 
-.share-btn.primary {
+.aether-action-btn.primary {
   background: linear-gradient(135deg, #fef08a 0%, #f59e0b 100%);
   border: 1px solid rgba(254, 240, 138, 0.6);
   color: #0f172a;
   box-shadow: 0 4px 16px rgba(245, 158, 11, 0.35);
 }
 
-.share-btn.primary:hover:not(:disabled) {
+.aether-action-btn.primary:hover:not(:disabled) {
   background: linear-gradient(135deg, #ffffff 0%, #fbbf24 100%);
   transform: translateY(-2px);
   box-shadow: 0 6px 22px rgba(254, 240, 138, 0.5);
 }
 
-.share-btn.secondary {
+.aether-action-btn.secondary {
   background: linear-gradient(135deg, rgba(24, 20, 60, 0.6) 0%, rgba(15, 23, 42, 0.75) 100%);
   border: 1px solid rgba(254, 240, 138, 0.25);
   color: #ffffff;
   box-shadow: inset 0 1px 0 rgba(254, 240, 138, 0.15);
 }
 
-.share-btn.secondary:hover:not(:disabled) {
+.aether-action-btn.secondary:hover:not(:disabled) {
   background: linear-gradient(135deg, rgba(30, 27, 75, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
   border-color: rgba(254, 240, 138, 0.45);
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
 }
 
-.share-btn:disabled {
+.aether-action-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* Quick Social & Direct Link Row */
-.share-social-row {
+/* Quick Channels Grid */
+.aether-channels-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
   width: 100%;
 }
 
-.social-share-btn {
+.aether-channel-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -5079,46 +5079,47 @@ body {
   white-space: nowrap;
 }
 
-.social-share-btn .social-icon {
+.aether-channel-button .channel-icon {
   font-size: 0.88rem;
 }
 
-.social-share-btn:hover {
+.aether-channel-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
   background: rgba(24, 20, 60, 0.55);
   border-color: rgba(254, 240, 138, 0.38);
 }
 
-.btn-whatsapp:hover {
+.channel-wa:hover {
   background: rgba(37, 211, 102, 0.18);
   border-color: #25d366;
   color: #86efac;
 }
 
-.btn-telegram:hover {
+.channel-tg:hover {
   background: rgba(34, 158, 217, 0.18);
   border-color: #229ed9;
   color: #7dd3fc;
 }
 
-.btn-twitter:hover {
+.channel-x:hover {
   background: rgba(255, 255, 255, 0.15);
   border-color: #ffffff;
   color: #ffffff;
 }
 
-.btn-copy-link:hover {
+.channel-url:hover {
   background: rgba(56, 189, 248, 0.16);
   border-color: #38bdf8;
   color: #7dd3fc;
 }
 
-.btn-copy-text:hover {
+.channel-summary:hover {
   background: rgba(254, 240, 138, 0.16);
   border-color: #fef08a;
   color: #fef08a;
 }
+
 
 /* Modal SVG Art Sizing Constraints to Prevent Mobile / Flexbox Blowup */
 .hourly-hero-icon {
@@ -5263,7 +5264,7 @@ body {
   }
 
   .compare-nav-btn,
-  .share-nav-btn {
+  .nav-card-export-btn {
     width: 36px !important;
     height: 36px !important;
     min-width: 36px !important;
@@ -5333,11 +5334,11 @@ body {
     gap: 14px;
   }
 
-  .share-modal {
+  .aether-card-modal {
     max-width: 520px;
   }
 
-  .share-card-preview {
+  .aether-rendered-card-preview {
     padding: 15px 16px;
     gap: 11px;
   }
@@ -5359,15 +5360,15 @@ body {
     grid-column: 1 / -1;
   }
 
-  /* Share Modal & Weather Card Mobile Refinements */
-  .share-modal {
+  /* Weather Card Modal Mobile Refinements */
+  .aether-card-modal {
     max-width: 100% !important;
     padding: 14px 16px calc(24px + env(safe-area-inset-bottom, 0px)) !important;
     gap: 10px !important;
     max-height: 90vh !important;
   }
 
-  .share-card-preview {
+  .aether-rendered-card-preview {
     padding: 13px 15px !important;
     gap: 10px !important;
     border-radius: 18px !important;
@@ -5462,29 +5463,29 @@ body {
     flex-shrink: 0 !important;
   }
 
-  .share-options-header {
+  .aether-deck-header {
     margin-top: 1px !important;
     margin-bottom: -4px !important;
   }
 
-  .share-options-title {
+  .aether-deck-title {
     font-size: 0.7rem !important;
     letter-spacing: 0.6px !important;
   }
 
-  .share-actions-row {
+  .aether-action-grid {
     grid-template-columns: 1fr 1fr !important;
     gap: 6px !important;
     width: 100% !important;
   }
 
-  .share-btn.primary {
+  .aether-action-btn.primary {
     grid-column: 1 / -1 !important;
     padding: 11px 14px !important;
     font-size: 0.85rem !important;
   }
 
-  .share-btn.secondary {
+  .aether-action-btn.secondary {
     padding: 9px 12px !important;
     font-size: 0.79rem !important;
     min-width: 0 !important;
@@ -5498,42 +5499,42 @@ body {
     display: inline !important;
   }
 
-  /* 6-column balanced symmetrical social row */
-  .share-social-row {
+  /* 6-column balanced symmetrical channels row */
+  .aether-channels-grid {
     display: grid !important;
     grid-template-columns: repeat(6, 1fr) !important;
     gap: 6px !important;
     width: 100% !important;
   }
 
-  .share-social-row .btn-whatsapp {
+  .aether-channels-grid .channel-wa {
     grid-column: span 2 !important;
   }
 
-  .share-social-row .btn-telegram {
+  .aether-channels-grid .channel-tg {
     grid-column: span 2 !important;
   }
 
-  .share-social-row .btn-twitter {
+  .aether-channels-grid .channel-x {
     grid-column: span 2 !important;
   }
 
-  .share-social-row .btn-copy-link {
+  .aether-channels-grid .channel-url {
     grid-column: span 3 !important;
   }
 
-  .share-social-row .btn-copy-text {
+  .aether-channels-grid .channel-summary {
     grid-column: span 3 !important;
   }
 
-  .social-share-btn {
+  .aether-channel-button {
     padding: 8px 6px !important;
     font-size: 0.73rem !important;
     gap: 5px !important;
     min-width: 0 !important;
   }
 
-  .social-share-btn .social-btn-text {
+  .aether-channel-button .channel-label {
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
