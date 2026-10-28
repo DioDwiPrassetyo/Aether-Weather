@@ -87,16 +87,26 @@ export const HourlyDetailModal: React.FC<HourlyDetailModalProps> = ({
       <div
         className="glass-card modal-container hourly-detail-modal"
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="hourly-detail-title"
+        tabIndex={-1}
       >
         {/* Modal Header */}
         <div className="modal-header">
           <div>
-            <h3 className="modal-title">{t.hourlyDetailTitle}</h3>
+            <h3 className="modal-title" id="hourly-detail-title">{t.hourlyDetailTitle}</h3>
             <span className="modal-subtitle">
               {dayName}, {dateStr} &bull; {hourStr}
             </span>
           </div>
-          <button className="modal-close-btn" onClick={onClose} title={t.closeHourlyDetail}>
+          <button
+            className="modal-close-btn"
+            onClick={onClose}
+            title={t.closeHourlyDetail}
+            aria-label={t.closeHourlyDetail}
+            autoFocus
+          >
             <X size={20} />
           </button>
         </div>

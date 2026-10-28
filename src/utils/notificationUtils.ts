@@ -1,6 +1,4 @@
-/**
- * Utility for Web Notifications API (Browser Push & Severe Weather Alerts)
- */
+/** Utility functions for opt-in weather alert notifications. */
 
 export const NOTIF_STORAGE_KEY = 'aether_browser_notifications_enabled';
 
@@ -45,13 +43,15 @@ export function sendWeatherNotification(title: string, options?: NotificationOpt
   if (!isNotificationSupported() || Notification.permission !== 'granted') return;
   try {
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.ready.then((reg) => {
-        reg.showNotification(title, {
-          icon: '/icon.svg',
-          badge: '/icon.svg',
-          ...options,
-        });
-      });
+      void navigator.serviceWorker.ready
+        .then((reg) =>
+          reg.showNotification(title, {
+            icon: '/icon.svg',
+            badge: '/icon.svg',
+            ...options,
+          })
+        )
+        .catch((err) => console.warn('Error sending weather notification:', err));
     } else {
       new Notification(title, {
         icon: '/icon.svg',
@@ -62,12 +62,3 @@ export function sendWeatherNotification(title: string, options?: NotificationOpt
     console.warn('Error sending notification:', err);
   }
 }
-
-export function notifyWeatherUpdate(cityName: string, temp: number, unitSymbol: string, description: string) {
-  if (!isNotificationActive()) return;
-  sendWeatherNotification(`🌤️ Cuaca ${cityName}: ${temp}${unitSymbol}`, {
-    body: `${description}. Buka aplikasi Aether Weather untuk detail radar & prakiraan jam ke jam.`,
-    tag: 'weather-update',
-  });
-}
-

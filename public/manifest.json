@@ -1,6 +1,6 @@
 {
-  "name": "Aether Weather — Intelligence & Live Radar",
-  "short_name": "AetherWeather",
+  "name": "WeatherAether — Intelligence & Live Radar",
+  "short_name": "WeatherAether",
   "description": "Modern Real-Time Weather Intelligence, Astronomy & Live Radar with Next.js",
   "start_url": "/",
   "id": "/",

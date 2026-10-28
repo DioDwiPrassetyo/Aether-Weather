@@ -10,7 +10,7 @@
     // CONFIGURATION & STATE
     // =========================================================================
     const CONFIG = {
-        API_KEY: 'dcaeefb2330ad28a6d30a6c6515088ec',
+        API_KEY: (typeof window !== 'undefined' && window.OPENWEATHER_API_KEY) ? String(window.OPENWEATHER_API_KEY).trim() : '',
         BASE_URL: 'https://api.openweathermap.org/data/2.5',
         GEO_URL: 'https://api.openweathermap.org/geo/1.0',
         DEFAULT_CITY: 'Jakarta',

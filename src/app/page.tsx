@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { CloudSun, WifiOff } from 'lucide-react';
+import { CloudSun } from 'lucide-react';
 import {
   CurrentWeatherResponse,
   ForecastResponse,
+  ForecastItem,
   AirPollutionResponse,
   UnitType,
   WeatherTheme,
@@ -14,6 +15,8 @@ import {
 import {
   fetchCurrentWeather,
   fetchForecastData,
+  fetchHourlyForecast,
+  interpolateHourlyForecast,
   fetchAirPollutionData,
   getThemeFromWeather,
 } from '@/utils/weatherUtils';
@@ -34,8 +37,15 @@ import { CityComparisonModal } from '@/components/CityComparisonModal';
 import { ShareWeatherModal } from '@/components/ShareWeatherModal';
 import { LifestyleIndexes } from '@/components/LifestyleIndexes';
 import { AstronomyCard } from '@/components/AstronomyCard';
+import { AtmosphericInsightsCard } from '@/components/AtmosphericInsightsCard';
 import { StickyWeatherPill } from '@/components/StickyWeatherPill';
-import { notifyWeatherUpdate } from '@/utils/notificationUtils';
+import {
+  DEFAULT_ALERT_PREFERENCES,
+  isCachedWeatherSnapshot,
+  matchesCachedWeather,
+  parseAlertPreferences,
+  WeatherAlertPreferences,
+} from '@/utils/weatherRules';
 
 // Dynamically import Leaflet WeatherMap with SSR disabled
 const WeatherMap = dynamic(
@@ -66,6 +76,7 @@ const STORAGE_KEYS = {
   RECENTS: 'aether_next_recents',
   LAST_CITY: 'aether_next_last_city',
   CACHED_WEATHER: 'aether_cached_weather_snapshot',
+  ALERT_PREFERENCES: 'aether_alert_preferences',
 };
 
 export default function WeatherPage() {
@@ -74,17 +85,29 @@ export default function WeatherPage() {
   const [theme, setTheme] = useState<WeatherTheme>('siang');
   const [currentWeather, setCurrentWeather] = useState<CurrentWeatherResponse | null>(null);
   const [forecast, setForecast] = useState<ForecastResponse | null>(null);
+  const [hourlyItems, setHourlyItems] = useState<ForecastItem[]>([]);
   const [airPollution, setAirPollution] = useState<AirPollutionResponse | null>(null);
   const [favorites, setFavorites] = useState<FavoriteLocation[]>([]);
   const [recentSearches, setRecentSearches] = useState<RecentSearchItem[]>([]);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isOffline, setIsOffline] = useState<boolean>(false);
+  const [alertPreferences, setAlertPreferences] = useState<WeatherAlertPreferences>(
+    DEFAULT_ALERT_PREFERENCES
+  );
+  const unitRef = useRef<UnitType>('metric');
+  const langRef = useRef<Language>('id');
+  const requestIdRef = useRef(0);
 
-  // Modals state
+  // Modals & Preview state
   const [selectedHourlyIndex, setSelectedHourlyIndex] = useState<number | null>(null);
   const [isComparisonOpen, setIsComparisonOpen] = useState<boolean>(false);
   const [isShareOpen, setIsShareOpen] = useState<boolean>(false);
+  const [previewWeather, setPreviewWeather] = useState<{
+    weatherId: number;
+    windSpeed: number;
+    isNight: boolean;
+  } | null>(null);
 
   const t = getTranslation(lang);
 
@@ -125,17 +148,29 @@ export default function WeatherPage() {
   };
 
   const loadWeatherData = useCallback(
-    async (target: { city?: string; lat?: number; lon?: number }, selectedUnit = unit) => {
+    async (
+      target: { city?: string; lat?: number; lon?: number },
+      selectedUnit = unitRef.current
+    ) => {
+      const requestId = ++requestIdRef.current;
       setIsLoading(true);
+      setIsOffline(false);
       try {
         const current = await fetchCurrentWeather(target, selectedUnit);
-        const [forecastRes, pollutionRes] = await Promise.all([
+        const [forecastRes, pollutionRes, hourlyRes] = await Promise.all([
           fetchForecastData(current.coord.lat, current.coord.lon, selectedUnit),
           fetchAirPollutionData(current.coord.lat, current.coord.lon),
+          fetchHourlyForecast(current.coord.lat, current.coord.lon, selectedUnit, current),
         ]);
+        if (requestId !== requestIdRef.current) return;
 
         setCurrentWeather(current);
         setForecast(forecastRes);
+        const resolvedHourly =
+          hourlyRes.length > 0
+            ? hourlyRes
+            : interpolateHourlyForecast(current, forecastRes.list, 24);
+        setHourlyItems(resolvedHourly);
         setAirPollution(pollutionRes);
 
         // Always automatically adapt theme based on local time and weather conditions
@@ -157,19 +192,7 @@ export default function WeatherPage() {
             window.history.replaceState({}, '', url.toString());
           } catch {}
 
-          // Browser push notification if user opted-in
-          const unitSymbol = selectedUnit === 'metric' ? '°C' : '°F';
-          const conditionDesc =
-            t.descriptions[current.weather[0].description.toLowerCase()] ||
-            current.weather[0].description;
-          notifyWeatherUpdate(
-            current.name,
-            Math.round(current.main.temp),
-            unitSymbol,
-            conditionDesc
-          );
-
-          // Cache snapshot for offline mode
+          // Store each snapshot with enough context to avoid showing another city's data.
           localStorage.setItem(
             STORAGE_KEYS.CACHED_WEATHER,
             JSON.stringify({
@@ -177,6 +200,8 @@ export default function WeatherPage() {
               forecast: forecastRes,
               pollution: pollutionRes,
               theme: autoTheme,
+              savedAt: Date.now(),
+              requestedCity: target.city,
             })
           );
         }
@@ -190,36 +215,46 @@ export default function WeatherPage() {
         });
 
         addToast(
-          lang === 'id'
+          langRef.current === 'id'
             ? `Cuaca untuk ${current.name} berhasil diperbarui.`
             : `Weather for ${current.name} updated.`,
           'success'
         );
       } catch (err: unknown) {
-        console.error(err);
+        if (requestId !== requestIdRef.current) return;
         // Offline / Network Fallback Check
         if (typeof window !== 'undefined') {
           const cached = localStorage.getItem(STORAGE_KEYS.CACHED_WEATHER);
           if (cached) {
             try {
-              const data = JSON.parse(cached);
-              setCurrentWeather(data.current);
-              setForecast(data.forecast);
-              setAirPollution(data.pollution);
-              if (data.theme) {
+              const data: unknown = JSON.parse(cached);
+              if (isCachedWeatherSnapshot(data) && matchesCachedWeather(data, target)) {
+                setCurrentWeather(data.current);
+                setForecast(data.forecast);
+                setHourlyItems(interpolateHourlyForecast(data.current, data.forecast.list, 24));
+                setAirPollution(data.pollution);
                 setTheme(data.theme);
                 document.body.setAttribute('data-theme', data.theme);
+                setIsOffline(true);
+                const ageMinutes = Math.max(
+                  0,
+                  Math.floor((Date.now() - data.savedAt) / 60000)
+                );
+                const ageText =
+                  ageMinutes < 60
+                    ? `${ageMinutes} ${langRef.current === 'id' ? 'menit' : 'minutes'}`
+                    : `${Math.floor(ageMinutes / 60)} ${langRef.current === 'id' ? 'jam' : 'hours'}`;
+                addToast(
+                  langRef.current === 'id'
+                    ? `Tidak dapat memperbarui ${data.current.name}. Menampilkan snapshot yang disimpan ${ageText} lalu.`
+                    : `Could not refresh ${data.current.name}. Showing a snapshot saved ${ageText} ago.`,
+                  'info'
+                );
+                return;
               }
-              setIsOffline(true);
-              addToast(
-                lang === 'id'
-                  ? 'Gagal terhubung ke jaringan. Menampilkan cuaca tersimpan (Offline).'
-                  : 'Network unreachable. Displaying cached weather snapshot.',
-                'info'
-              );
-              return;
             } catch (parseErr) {
-              console.warn(parseErr);
+              console.warn('Cached weather snapshot is invalid:', parseErr);
+              localStorage.removeItem(STORAGE_KEYS.CACHED_WEATHER);
             }
           }
         }
@@ -227,17 +262,26 @@ export default function WeatherPage() {
         const errMsg = err instanceof Error ? err.message : 'Gagal memuat data cuaca.';
         addToast(errMsg, 'error');
       } finally {
-        setIsLoading(false);
+        if (requestId === requestIdRef.current) setIsLoading(false);
       }
     },
-    [unit, lang, addToast, addRecentSearch]
+    [addToast, addRecentSearch]
   );
 
   // Initialize from LocalStorage & Listen for Online/Offline events
   useEffect(() => {
-    const savedUnit = (localStorage.getItem(STORAGE_KEYS.UNIT) as UnitType) || 'metric';
+    const storedUnit = localStorage.getItem(STORAGE_KEYS.UNIT);
+    const savedUnit: UnitType = storedUnit === 'imperial' ? 'imperial' : 'metric';
     const rawLang = localStorage.getItem(STORAGE_KEYS.LANG);
     const savedLang: Language = rawLang === 'en' ? 'en' : 'id';
+    let savedAlertPreferences = DEFAULT_ALERT_PREFERENCES;
+    try {
+      savedAlertPreferences = parseAlertPreferences(
+        JSON.parse(localStorage.getItem(STORAGE_KEYS.ALERT_PREFERENCES) || 'null')
+      );
+    } catch (error) {
+      console.warn('Saved alert preferences could not be read:', error);
+    }
 
     let savedFavorites: FavoriteLocation[] = [];
     try {
@@ -264,6 +308,10 @@ export default function WeatherPage() {
 
     setUnit(savedUnit);
     setLang(savedLang);
+    document.documentElement.lang = savedLang;
+    unitRef.current = savedUnit;
+    langRef.current = savedLang;
+    setAlertPreferences(savedAlertPreferences);
     setFavorites(savedFavorites);
     setRecentSearches(savedRecents);
 
@@ -303,6 +351,7 @@ export default function WeatherPage() {
 
   const handleUnitChange = (newUnit: UnitType) => {
     if (newUnit === unit) return;
+    unitRef.current = newUnit;
     setUnit(newUnit);
     localStorage.setItem(STORAGE_KEYS.UNIT, newUnit);
     if (currentWeather) {
@@ -314,7 +363,9 @@ export default function WeatherPage() {
   };
 
   const handleLangChange = (newLang: Language) => {
+    langRef.current = newLang;
     setLang(newLang);
+    document.documentElement.lang = newLang;
     localStorage.setItem(STORAGE_KEYS.LANG, newLang);
     addToast(
       newLang === 'id'
@@ -322,6 +373,12 @@ export default function WeatherPage() {
         : 'Language switched to English 🇬🇧',
       'info'
     );
+  };
+
+  const handleAlertPreferencesChange = (preferences: WeatherAlertPreferences) => {
+    const normalized = parseAlertPreferences(preferences);
+    setAlertPreferences(normalized);
+    localStorage.setItem(STORAGE_KEYS.ALERT_PREFERENCES, JSON.stringify(normalized));
   };
 
   const handleToggleFavorite = () => {
@@ -378,9 +435,35 @@ export default function WeatherPage() {
       favorites.some((f) => f.city.toLowerCase() === currentWeather.name.toLowerCase())
   );
 
+  const effectiveWeatherId = previewWeather
+    ? previewWeather.weatherId
+    : currentWeather?.weather[0]?.id;
+  const effectiveWindSpeed = previewWeather
+    ? previewWeather.windSpeed
+    : currentWeather?.wind?.speed;
+  const effectiveIsNight = previewWeather
+    ? previewWeather.isNight
+    : currentWeather
+      ? currentWeather.weather[0].icon.endsWith('n')
+      : false;
+  const effectiveTheme: WeatherTheme = previewWeather
+    ? getThemeFromWeather(previewWeather.weatherId, previewWeather.isNight)
+    : theme;
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      document.body.setAttribute('data-theme', effectiveTheme);
+    }
+  }, [effectiveTheme]);
+
   return (
     <>
-      <WeatherCanvas theme={theme} />
+      <WeatherCanvas
+        theme={effectiveTheme}
+        isNight={effectiveIsNight}
+        weatherId={effectiveWeatherId}
+        windSpeed={effectiveWindSpeed}
+      />
       <div className="ambient-glow"></div>
 
       <div className="app-layout">
@@ -390,6 +473,8 @@ export default function WeatherPage() {
           onUnitChange={handleUnitChange}
           lang={lang}
           onLangChange={handleLangChange}
+          alertPreferences={alertPreferences}
+          onAlertPreferencesChange={handleAlertPreferencesChange}
           onSearch={(city) => loadWeatherData({ city })}
           onCoordsSearch={(lat, lon) => loadWeatherData({ lat, lon })}
           onRefresh={() => {
@@ -410,6 +495,15 @@ export default function WeatherPage() {
           onOpenComparison={() => setIsComparisonOpen(true)}
           onOpenShare={() => setIsShareOpen(true)}
           onShowToast={addToast}
+          weatherId={effectiveWeatherId}
+          isNight={effectiveIsNight}
+          windSpeedKmh={
+            effectiveWindSpeed !== undefined
+              ? unit === 'metric'
+                ? effectiveWindSpeed * 3.6
+                : effectiveWindSpeed * 1.609
+              : 10
+          }
         />
 
         {/* Quick Access Chips & Favorites */}
@@ -429,6 +523,7 @@ export default function WeatherPage() {
             forecast={forecast}
             unit={unit}
             lang={lang}
+            preferences={alertPreferences}
           />
         )}
 
@@ -438,9 +533,9 @@ export default function WeatherPage() {
             <div className="loading-skeleton">
               <div className="skeleton-spinner">
                 <div className="spinner-ring"></div>
-                <CloudSun size={26} color="#facc15" />
+                <CloudSun size={26} color="#38bdf8" />
               </div>
-              <p>{lang === 'id' ? 'Memuat data atmosfer Next.js...' : 'Loading atmospheric data...'}</p>
+              <p>{lang === 'id' ? 'Memuat telemetri cuaca...' : 'Loading atmospheric telemetry...'}</p>
             </div>
           )}
 
@@ -450,21 +545,24 @@ export default function WeatherPage() {
               <section className="column-left">
                 <HeroCard
                   weather={currentWeather}
+                  hourlyItems={hourlyItems.length > 0 ? hourlyItems : (forecast ? forecast.list : [])}
                   unit={unit}
                   lang={lang}
                   onOpenShare={() => setIsShareOpen(true)}
                   isOffline={isOffline}
+                  onPreviewWeatherChange={setPreviewWeather}
                 />
                 {forecast && (
                   <>
                     <HourlyForecast
-                      items={forecast.list}
+                      items={hourlyItems.length > 0 ? hourlyItems : forecast.list}
                       timezoneOffset={currentWeather.timezone}
                       onSelectHour={(idx) => setSelectedHourlyIndex(idx)}
+                      unit={unit}
                       lang={lang}
                     />
                     <WeatherChart
-                      items={forecast.list}
+                      items={hourlyItems.length > 0 ? hourlyItems : forecast.list}
                       timezoneOffset={currentWeather.timezone}
                       unit={unit}
                       lang={lang}
@@ -504,6 +602,19 @@ export default function WeatherPage() {
                 />
               </section>
 
+              {/* Atmospheric Intelligence & 24H Optimal Windows (Full-Width) */}
+              {forecast && (
+                <section className="section-forecast-5day">
+                  <AtmosphericInsightsCard
+                    current={currentWeather}
+                    hourlyItems={hourlyItems.length > 0 ? hourlyItems : forecast.list}
+                    unit={unit}
+                    lang={lang}
+                    onSelectHour={(idx) => setSelectedHourlyIndex(idx)}
+                  />
+                </section>
+              )}
+
               {/* Interactive Radar Map (Full-Width) */}
               <section className="section-forecast-5day">
                 <WeatherMap
@@ -512,12 +623,21 @@ export default function WeatherPage() {
                   cityName={currentWeather.name}
                   currentTemp={Math.round(currentWeather.main.temp)}
                   unitSymbol={unit === 'metric' ? '°C' : '°F'}
+                  lang={lang}
                   onLocationSelect={(lat, lon) => loadWeatherData({ lat, lon })}
                 />
               </section>
 
               {/* 5-Day Extended Forecast */}
-              {forecast && <FiveDayForecast items={forecast.list} lang={lang} />}
+              {forecast && (
+                <FiveDayForecast
+                  items={forecast.list}
+                  timezoneOffset={currentWeather ? currentWeather.timezone : 0}
+                  currentTemp={currentWeather.main.temp}
+                  unit={unit}
+                  lang={lang}
+                />
+              )}
             </>
           )}
         </main>
@@ -527,7 +647,7 @@ export default function WeatherPage() {
           <HourlyDetailModal
             isOpen={selectedHourlyIndex !== null}
             onClose={() => setSelectedHourlyIndex(null)}
-            items={forecast.list}
+            items={hourlyItems.length > 0 ? hourlyItems : forecast.list}
             currentIndex={selectedHourlyIndex}
             onSelectIndex={(idx) => setSelectedHourlyIndex(idx)}
             timezoneOffset={currentWeather ? currentWeather.timezone : 0}
@@ -574,14 +694,36 @@ export default function WeatherPage() {
         <ToastContainer toasts={toasts} />
 
         <footer className="app-footer">
-          <p className="footer-copyright">
-            &copy; {new Date().getFullYear()} Aether Weather &bull; Built with ❤️ by <span className="footer-author">Dio</span>
-          </p>
-          <p className="footer-subtext">
-            {lang === 'id'
-              ? 'Data cuaca real-time akurat didukung oleh OpenWeatherMap & RainViewer'
-              : 'Real-time atmospheric intelligence powered by OpenWeatherMap & RainViewer'}
-          </p>
+          <div className="footer-content">
+            <div className="footer-brand-row">
+              <span className="footer-brand">✦ WeatherAether</span>
+              <span className="footer-divider-dot" aria-hidden="true" />
+              <span className="footer-tagline">
+                {lang === 'id'
+                  ? 'Stasiun Pengamatan Atmosfer Real-Time'
+                  : 'Real-Time Atmospheric Observation'}
+              </span>
+            </div>
+
+            <div className="footer-credit-badge">
+              <span>Made with</span>
+              <span className="footer-heart" role="img" aria-label="love">❤️</span>
+              <span>by</span>
+              <span className="footer-author">Dio</span>
+            </div>
+
+            <div className="footer-meta-row">
+              <span className="footer-copyright">
+                &copy; {new Date().getFullYear()} WeatherAether
+              </span>
+              <span className="footer-meta-divider">&bull;</span>
+              <span className="footer-subtext">
+                {lang === 'id'
+                  ? 'Telemetri didukung oleh OpenWeatherMap, Open-Meteo & RainViewer'
+                  : 'Telemetry powered by OpenWeatherMap, Open-Meteo & RainViewer'}
+              </span>
+            </div>
+          </div>
         </footer>
       </div>
     </>

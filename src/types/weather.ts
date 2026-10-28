@@ -67,6 +67,14 @@ export interface ForecastItem {
   };
   visibility: number;
   pop: number; // Probability of precipitation (0 to 1)
+  rain?: {
+    '3h'?: number;
+    '1h'?: number;
+  };
+  snow?: {
+    '3h'?: number;
+    '1h'?: number;
+  };
   sys: {
     pod: 'd' | 'n';
   };

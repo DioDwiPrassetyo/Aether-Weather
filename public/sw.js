@@ -1,5 +1,5 @@
 // AetherWeather PWA Service Worker
-const CACHE_NAME = 'aether-weather-v1';
+const CACHE_NAME = 'aether-weather-v3';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -24,7 +24,10 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME) {
+          if (
+            (key.startsWith('aether-weather-') && key !== CACHE_NAME) ||
+            key === 'aether-api-cache'
+          ) {
             return caches.delete(key);
           }
         })
@@ -35,42 +38,41 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
 
-  // Network-first strategy for weather API requests
-  if (url.origin.includes('openweathermap.org') || url.origin.includes('rainviewer.com')) {
+  // Weather data is cached by the app with location and timestamp metadata.
+  if (url.origin !== self.location.origin) return;
+
+  // Next.js serves versioned runtime and HMR assets; never let the PWA
+  // service worker pair stale client bundles with freshly rendered HTML.
+  if (url.pathname.startsWith('/_next/')) return;
+
+  if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          // Clone and cache successful API response for offline fallback
-          if (response.status === 200) {
-            const clone = response.clone();
-            caches.open('aether-api-cache').then((cache) => {
-              cache.put(event.request, clone);
-            });
-          }
-          return response;
-        })
-        .catch(() => {
-          // Fallback to cache if network fails (offline)
-          return caches.match(event.request);
-        })
+      fetch(event.request).catch(async () => {
+        const cachedPage = await caches.match('/');
+        if (cachedPage) return cachedPage;
+        return new Response('Offline', {
+          status: 503,
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+        });
+      })
     );
     return;
   }
 
-  // Cache-first strategy for static assets
+  if (!['script', 'style', 'image', 'font'].includes(event.request.destination)) return;
+
   event.respondWith(
-    caches.match(event.request).then((cached) => {
+    caches.open(CACHE_NAME).then(async (cache) => {
+      const cached = await cache.match(event.request);
       if (cached) return cached;
-      return fetch(event.request).catch(() => {
-        if (event.request.mode === 'navigate') {
-          return caches.match('/');
-        }
-      });
+
+      const response = await fetch(event.request);
+      if (response.ok) await cache.put(event.request, response.clone());
+      return response;
     })
   );
 });

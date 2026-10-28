@@ -14,9 +14,15 @@ export interface MoonPhaseInfo {
   ageDays: number; // 0 to 29.53
   illuminationPct: number; // 0 to 100
   emoji: string;
+  isWaxing: boolean;
+  elongationDeg: number; // 0 to 180
+  phaseAngleDeg: number; // 0 to 360
   nextFullMoonDays: number;
   nextNewMoonDays: number;
   lunarDistanceKm: number;
+  distanceStatus: 'perigee' | 'normal' | 'apogee';
+  tidalState: 'spring' | 'moderate' | 'neap';
+  tidalStrengthPct: number;
   stargazingQuality: 'excellent' | 'good' | 'bright';
 }
 
@@ -32,6 +38,9 @@ export interface GoldenHourInfo {
   morningBlueEnd: string;
   eveningBlueStart: string;
   eveningBlueEnd: string;
+  moonriseTime: string;
+  moonsetTime: string;
+  solarDayProgressPct: number;
 }
 
 // Synodic lunar month in seconds
@@ -98,6 +107,23 @@ export function getMoonPhase(timestampSec = Math.floor(Date.now() / 1000)): Moon
   const anomPhase = ((timestampSec - KNOWN_NEW_MOON_UTC) / ANOMALISTIC_MONTH_SEC) % 1;
   const lunarDistanceKm = Math.round(384400 - 21000 * Math.cos(anomPhase * 2 * Math.PI));
 
+  let distanceStatus: 'perigee' | 'normal' | 'apogee' = 'normal';
+  if (lunarDistanceKm <= 368500) distanceStatus = 'perigee';
+  else if (lunarDistanceKm >= 400000) distanceStatus = 'apogee';
+
+  const isWaxing = phaseNormalized <= 0.5;
+  const phaseAngleDeg = Math.round(phaseNormalized * 360);
+  const elongationDeg = Math.round(
+    (phaseNormalized <= 0.5 ? phaseNormalized * 2 : (1 - phaseNormalized) * 2) * 180
+  );
+
+  // Gravitational Tidal Strength (peaks at New Moon 0.0 and Full Moon 0.5 => Spring Tide / Pasang Purnama)
+  const syzygyAlignment = Math.abs(Math.cos(phaseNormalized * 2 * Math.PI)); // 1 at new/full, 0 at quarters
+  const tidalStrengthPct = Math.round(52 + syzygyAlignment * 48);
+  let tidalState: 'spring' | 'moderate' | 'neap' = 'moderate';
+  if (syzygyAlignment >= 0.78) tidalState = 'spring';
+  else if (syzygyAlignment <= 0.32) tidalState = 'neap';
+
   // Stargazing condition based on lunar wash
   let stargazingQuality: 'excellent' | 'good' | 'bright' = 'good';
   if (illuminationPct < 30) stargazingQuality = 'excellent';
@@ -109,9 +135,15 @@ export function getMoonPhase(timestampSec = Math.floor(Date.now() / 1000)): Moon
     ageDays: Math.round(ageDays * 10) / 10,
     illuminationPct,
     emoji,
+    isWaxing,
+    elongationDeg,
+    phaseAngleDeg,
     nextFullMoonDays,
     nextNewMoonDays,
     lunarDistanceKm,
+    distanceStatus,
+    tidalState,
+    tidalStrengthPct,
     stargazingQuality,
   };
 }
@@ -163,6 +195,20 @@ export function getGoldenHourInfo(
   else if (isMorningBlue) activePeriodName = 'Blue Hour Fajar';
   else if (isEveningBlue) activePeriodName = 'Blue Hour Senja';
 
+  // Estimate Moonrise & Moonset based on sunrise/sunset and lunar phase offset
+  const moonData = getMoonPhase(currentSec);
+  const phaseLagSec = Math.round(moonData.phaseNormalized * 86400);
+  const estMoonriseSec = sunriseSec + phaseLagSec;
+  const estMoonsetSec = sunsetSec + phaseLagSec;
+
+  // Calculate 24h local day progress (0% at 00:00, 100% at 24:00)
+  const localDate = new Date((currentSec + timezoneOffsetSec) * 1000);
+  const secondsIntoDay =
+    localDate.getUTCHours() * 3600 +
+    localDate.getUTCMinutes() * 60 +
+    localDate.getUTCSeconds();
+  const solarDayProgressPct = Math.max(0, Math.min(100, (secondsIntoDay / 86400) * 100));
+
   return {
     isGoldenHourNow,
     isBlueHourNow,
@@ -175,5 +221,8 @@ export function getGoldenHourInfo(
     morningBlueEnd: formatLocalTime(mBlueEnd, timezoneOffsetSec),
     eveningBlueStart: formatLocalTime(eBlueStart, timezoneOffsetSec),
     eveningBlueEnd: formatLocalTime(eBlueEnd, timezoneOffsetSec),
+    moonriseTime: formatLocalTime(estMoonriseSec, timezoneOffsetSec),
+    moonsetTime: formatLocalTime(estMoonsetSec, timezoneOffsetSec),
+    solarDayProgressPct,
   };
 }

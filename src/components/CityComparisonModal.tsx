@@ -54,11 +54,22 @@ export const CityComparisonModal: React.FC<CityComparisonModalProps> = ({
   const [city2Query, setCity2Query] = useState('');
   const [suggestions, setSuggestions] = useState<GeocodingResult[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchError, setSearchError] = useState('');
+  const [city2Error, setCity2Error] = useState('');
   const [city2Weather, setCity2Weather] = useState<CurrentWeatherResponse | null>(null);
   const [city2Pollution, setCity2Pollution] = useState<AirPollutionResponse | null>(null);
   const [city1Pollution, setCity1Pollution] = useState<AirPollutionResponse | null>(null);
   const [isLoadingCity2, setIsLoadingCity2] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const searchControllerRef = useRef<AbortController | null>(null);
+  const searchRequestRef = useRef(0);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      searchControllerRef.current?.abort();
+    };
+  }, []);
 
   // Fetch City 1 pollution on open
   useEffect(() => {
@@ -85,6 +96,7 @@ export const CityComparisonModal: React.FC<CityComparisonModalProps> = ({
 
   const loadCity2Data = async (cityName: string) => {
     setIsLoadingCity2(true);
+    setCity2Error('');
     setShowSuggestions(false);
     try {
       const data = await fetchCurrentWeather({ city: cityName }, unit);
@@ -93,7 +105,13 @@ export const CityComparisonModal: React.FC<CityComparisonModalProps> = ({
       setCity2Pollution(poll);
       setCity2Query(data.name);
     } catch (err) {
-      console.warn('Gagal memuat cuaca kota pembanding:', err);
+      setCity2Error(
+        err instanceof Error
+          ? err.message
+          : lang === 'id'
+            ? 'Gagal memuat cuaca kota pembanding.'
+            : 'Could not load comparison weather.'
+      );
     } finally {
       setIsLoadingCity2(false);
     }
@@ -102,8 +120,11 @@ export const CityComparisonModal: React.FC<CityComparisonModalProps> = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setCity2Query(val);
+    setSearchError('');
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
+    searchControllerRef.current?.abort();
+    searchRequestRef.current += 1;
     if (val.trim().length < 2) {
       setSuggestions([]);
       setShowSuggestions(false);
@@ -111,12 +132,28 @@ export const CityComparisonModal: React.FC<CityComparisonModalProps> = ({
     }
 
     debounceRef.current = setTimeout(async () => {
+      const requestId = searchRequestRef.current;
+      const controller = new AbortController();
+      searchControllerRef.current = controller;
       try {
-        const results = await searchGeocoding(val.trim());
+        const results = await searchGeocoding(val.trim(), controller.signal);
+        if (requestId !== searchRequestRef.current) return;
         setSuggestions(results);
         setShowSuggestions(results.length > 0);
+        if (!results.length) {
+          setSearchError(lang === 'id' ? 'Lokasi tidak ditemukan.' : 'No locations found.');
+        }
       } catch (err) {
-        console.error(err);
+        if (controller.signal.aborted || requestId !== searchRequestRef.current) return;
+        setSuggestions([]);
+        setShowSuggestions(false);
+        setSearchError(
+          err instanceof Error
+            ? err.message
+            : lang === 'id'
+              ? 'Pencarian lokasi gagal.'
+              : 'Location search failed.'
+        );
       }
     }, 300);
   };
@@ -169,14 +206,24 @@ export const CityComparisonModal: React.FC<CityComparisonModalProps> = ({
       <div
         className="glass-card modal-container comparison-modal"
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="comparison-modal-title"
+        tabIndex={-1}
       >
         {/* Header */}
         <div className="modal-header">
           <div>
-            <h3 className="modal-title">{t.comparisonTitle}</h3>
+            <h3 className="modal-title" id="comparison-modal-title">{t.comparisonTitle}</h3>
             <span className="modal-subtitle">{t.comparisonSubtitle}</span>
           </div>
-          <button className="modal-close-btn" onClick={onClose} title={t.closeComparison}>
+          <button
+            className="modal-close-btn"
+            onClick={onClose}
+            title={t.closeComparison}
+            aria-label={t.closeComparison}
+            autoFocus
+          >
             <X size={20} />
           </button>
         </div>
@@ -191,6 +238,9 @@ export const CityComparisonModal: React.FC<CityComparisonModalProps> = ({
               onChange={handleInputChange}
               placeholder={t.searchCity2Placeholder}
               onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+              aria-label={t.searchCity2Placeholder}
+              aria-autocomplete="list"
+              aria-expanded={showSuggestions}
             />
             {showSuggestions && suggestions.length > 0 && (
               <div className="autocomplete-list compare-autocomplete">
@@ -208,6 +258,11 @@ export const CityComparisonModal: React.FC<CityComparisonModalProps> = ({
               </div>
             )}
           </div>
+          {searchError && (
+            <p className="search-status compare-search-status" role="status">
+              {searchError}
+            </p>
+          )}
 
           {/* Preset comparison chips */}
           <div className="compare-presets">
@@ -230,6 +285,11 @@ export const CityComparisonModal: React.FC<CityComparisonModalProps> = ({
             <span>{comparisonVerdict}</span>
             <span className="tz-badge">{tzText}</span>
           </div>
+        )}
+        {city2Error && (
+          <p className="compare-load-error" role="alert">
+            {city2Error}
+          </p>
         )}
 
         {/* Comparison Columns */}

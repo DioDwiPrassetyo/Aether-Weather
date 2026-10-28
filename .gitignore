@@ -21,7 +21,8 @@ yarn-error.log*
 # Environment files (keep .env.example)
 .env
 .env*.local
-!.env.example
+.env.example
+.env.local
 
 # Vercel deployment metadata
 .vercel

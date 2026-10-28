@@ -6,7 +6,7 @@
 [![Leaflet](https://img.shields.io/badge/Leaflet-1.9.4-199900?style=for-the-badge&logo=leaflet)](https://leafletjs.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-**AetherWeather** adalah aplikasi cuaca modern dengan estetika **Glassmorphism**, pencahayaan atmosferik dinamis, animasi latar cuaca (*canvas particle system*), kurva temperatur interaktif 24 jam, dan **peta radar hujan satelit live** global tanpa batasan API key.
+**AetherWeather** adalah aplikasi cuaca modern dengan estetika **Glassmorphism**, pencahayaan atmosferik dinamis, animasi latar cuaca (*canvas particle system*), kurva temperatur interaktif 24 jam, dan peta radar hujan RainViewer dengan waktu pembaruan yang ditampilkan.
 
 Dibuat dengan arsitektur ganda: **Next.js 16 App Router (React 19 + TypeScript)** untuk performa modern, serta versi mandiri **Vanilla HTML/CSS/JavaScript** di direktori `main/`.
 
@@ -23,8 +23,8 @@ Dibuat dengan arsitektur ganda: **Next.js 16 App Router (React 19 + TypeScript)*
   - Zero-overflow: Seluruh grid, kapsul per jam, dan kartu statistik menyesuaikan diri secara mulus tanpa terpotong.
 
 - 🗺️ **Peta Radar Cuaca Interaktif (Live Doppler Radar)**:
-  - Didukung oleh **Leaflet** dan **RainViewer API** (100% bebas API Key dan tanpa error kuota).
-  - Overlay radar hujan satelit *real-time* dengan animasi pergerakan awan presipitasi.
+  - Didukung oleh **Leaflet** dan **RainViewer API** tanpa API key.
+  - Frame radar yang tersedia dapat diputar sebagai animasi; waktu frame ditampilkan dan tidak dipromosikan sebagai data real-time.
   - Pilihan gaya peta: *🌙 Gelap (Dark Mode)*, *🛰️ Citra Satelit*, dan *🗺️ OpenStreetMap Jalanan*.
   - Klik lokasi mana saja di peta dunia untuk langsung memuat data cuaca titik tersebut.
 
@@ -47,8 +47,6 @@ Dibuat dengan arsitektur ganda: **Next.js 16 App Router (React 19 + TypeScript)*
   6. **Tekanan Udara (Pressure)**: Pengukuran hPa dengan status stabilitas barometrik.
   7. **Tutupan Awan (Cloud Cover)**: Persentase kepekatan awan di langit.
   8. **Peluang Hujan (Rain Chance / POP)**: Persentase probabilitas presipitasi.
-  9. **Fase Bulan & Astronomi**: Visualisasi piringan bulan dinamis (New Moon s.d. Full Moon), umur bulan dalam hari, persentase iluminasi, serta pelacak waktu *Golden Hour* & *Blue Hour* untuk fotografi.
-
 - 🌓 **Astronomi & Golden Hour Tracker**:
   - Algoritma perhitungan fase bulan astronomis (umur bulan, iluminasi, bayangan terminator dinamis SVG).
   - Jadwal *Golden Hour Pagi*, *Golden Hour Sore*, dan *Blue Hour* dengan indikator status aktif real-time.
@@ -56,7 +54,8 @@ Dibuat dengan arsitektur ganda: **Next.js 16 App Router (React 19 + TypeScript)*
 - 📲 **Progressive Web App (PWA) & Offline Mode**:
   - Dilengkapi `manifest.json`, icon maskable, dan Service Worker (`sw.js`).
   - Dapat diinstal langsung ke Homescreen Smartphone (Android/iOS) atau Desktop layaknya aplikasi native.
-  - Caching otomatis di `localStorage`: jika internet terputus atau mode pesawat aktif, aplikasi otomatis beralih ke *Mode Offline* dan menampilkan snapshot cuaca terakhir tanpa error.
+  - Snapshot cuaca terakhir disimpan per lokasi beserta waktu pembaruan. Saat offline, snapshot hanya ditampilkan jika cocok dengan kota/lokasi yang diminta dan diberi label offline.
+  - Service Worker menyimpan app shell dan aset lokal; data API tidak disajikan dari cache tersembunyi.
 
 - ⚖️ **Perbandingan Cuaca Multi-Kota (City Comparison Tool)**:
   - Bandingkan 2 kota berdampingan (*side-by-side*) secara instan dengan pencarian autocomplete atau preset kota global (Tokyo, Singapore, London, New York, dll.).
@@ -79,7 +78,8 @@ Dibuat dengan arsitektur ganda: **Next.js 16 App Router (React 19 + TypeScript)*
 
 - 🧠 **Smart Weather Advisor & Hazard Alerts**:
   - Rekomendasi busana, aktivitas luar ruangan, kondisi berkendara, dan perlindungan UV.
-  - Banner peringatan dini cuaca ekstrem otomatis saat mendeteksi badai petir, polusi tinggi, atau angin kencang.
+  - Indikasi cuaca berbasis prakiraan dengan ambang yang dapat dikonfigurasi; bukan peringatan resmi dari BMKG/otoritas.
+  - Notifikasi browser hanya untuk indikasi aktif saat aplikasi terbuka, dapat diatur per kategori, dan memiliki jeda anti-spam.
 
 - 🔍 **Pencarian Cerdas & Favorit**:
   - Pencarian kota global dengan fitur *autocomplete* dan tombol pintas keyboard `/`.
@@ -155,8 +155,10 @@ Weather App/
 ## 🚀 Memulai (Getting Started)
 
 ### Prasyarat
-- [Node.js](https://nodejs.org/) versi `18.18.0` atau yang lebih baru.
+- [Node.js](https://nodejs.org/) versi `20.9.0` atau yang lebih baru (persyaratan Next.js 16).
 - npm, yarn, atau pnpm.
+
+Versi Next.js di direktori `src/` adalah aplikasi utama dan memiliki fitur lengkap. `main/` adalah versi HTML/CSS/JavaScript mandiri dengan cakupan fitur yang berbeda; fitur dan perilaku kedua versi tidak otomatis sama.
 
 ### 1. Kloning Repositori
 ```bash
@@ -169,15 +171,20 @@ cd weather-app
 npm install
 ```
 
-### 3. Konfigurasi Environment Variables (Opsional)
+### 3. Konfigurasi Environment Variables (Wajib)
 Salin file `.env.example` menjadi `.env.local`:
 ```bash
 cp .env.example .env.local
 ```
-*(Catatan: Aplikasi sudah memiliki fallback API key aktif bawaan, tetapi Anda dapat memasukkan API Key pribadi dari [OpenWeatherMap](https://openweathermap.org/api) jika diinginkan)*:
+Pastikan Anda menambahkan API Key pribadi dari [OpenWeatherMap](https://openweathermap.org/api) karena aplikasi memerlukan kunci tersebut untuk mengambil data cuaca, prakiraan, dan geolocation.
 ```env
 NEXT_PUBLIC_OPENWEATHER_API_KEY=your_openweathermap_api_key_here
+NEXT_PUBLIC_OPENWEATHER_MAP_API_KEY=your_openweathermap_map_api_key_here
+NEXT_PUBLIC_OPENWEATHER_BASE_URL=https://api.openweathermap.org/data/2.5
+NEXT_PUBLIC_OPENWEATHER_GEO_URL=https://api.openweathermap.org/geo/1.0
 ```
+Nilai dengan awalan `NEXT_PUBLIC_` dikirim ke browser dan bukan rahasia. Batasi/rotasi key sesuai kemampuan akun OpenWeatherMap dan jangan gunakan kredensial server lain di sini. Versi `main/` tidak membaca `.env.local`; konfigurasi key browser-nya perlu disediakan oleh halaman hosting sebelum `script.js` dijalankan.
+`NEXT_PUBLIC_OPENWEATHER_MAP_API_KEY` khusus untuk overlay awan, suhu, dan angin. Jika tidak diatur, aplikasi menggunakan `NEXT_PUBLIC_OPENWEATHER_API_KEY` sebagai fallback.
 
 ### 4. Menjalankan Server Pengembangan (Dev Mode)
 ```bash
@@ -185,13 +192,19 @@ npm run dev
 ```
 Buka browser di [http://localhost:3000](http://localhost:3000) untuk melihat aplikasi Next.js.
 
-*(Atau jika ingin menjalankan versi standalone tanpa Node.js, Anda dapat langsung membuka file `main/index.html` menggunakan browser atau ekstensi Live Server di VS Code)*.
+*(Untuk mencoba versi standalone, sajikan `main/` melalui server lokal seperti Live Server dan sediakan `window.OPENWEATHER_API_KEY` sebelum `script.js` berjalan.)*
 
 ### 5. Membangun untuk Produksi (Production Build)
 ```bash
 npm run build
 npm run start
 ```
+
+### Menjalankan tes
+```bash
+npm test
+```
+Tes unit saat ini memeriksa ambang indikasi hujan/panas/angin, konversi angin, peluang hujan, pencocokan snapshot offline, dan validasi preferensi peringatan.
 
 ---
 

@@ -81,14 +81,44 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
     : nowUtcSec >= current.sys.sunrise && nowUtcSec < current.sys.sunset;
 
   // Progress of the sun across the daytime arc (0 at sunrise, 1 at sunset)
+  const totalDaySec = Math.max(1, current.sys.sunset - current.sys.sunrise);
+  const daylightHours = Math.floor(totalDaySec / 3600);
+  const daylightMins = Math.floor((totalDaySec % 3600) / 60);
+  const daylightDurationStr =
+    lang === 'id' ? `${daylightHours}j ${daylightMins}m` : `${daylightHours}h ${daylightMins}m`;
+
   let progress = 0;
+  let sunCountdownStr = '';
   if (isDaytime) {
-    const totalDaySec = Math.max(1, current.sys.sunset - current.sys.sunrise);
-    const elapsedDaySec = nowUtcSec - current.sys.sunrise;
+    const elapsedDaySec = Math.max(0, nowUtcSec - current.sys.sunrise);
     progress = Math.max(0, Math.min(1, elapsedDaySec / totalDaySec));
+    const remSec = Math.max(0, current.sys.sunset - nowUtcSec);
+    const remH = Math.floor(remSec / 3600);
+    const remM = Math.floor((remSec % 3600) / 60);
+    sunCountdownStr =
+      lang === 'id'
+        ? `${remH}j ${remM}m menuju senja`
+        : `${remH}h ${remM}m until sunset`;
   } else {
     progress = nowUtcSec >= current.sys.sunset ? 1 : 0;
+    const nextSunrise =
+      nowUtcSec >= current.sys.sunset ? current.sys.sunrise + 86400 : current.sys.sunrise;
+    const remSec = Math.max(0, nextSunrise - nowUtcSec);
+    const remH = Math.floor(remSec / 3600);
+    const remM = Math.floor((remSec % 3600) / 60);
+    sunCountdownStr =
+      lang === 'id'
+        ? `${remH}j ${remM}m menuju fajar`
+        : `${remH}h ${remM}m until sunrise`;
   }
+
+  // Estimate real-time UV Index from solar elevation & cloud cover
+  const solarElevationFactor = isDaytime ? Math.sin(progress * Math.PI) : 0;
+  const latFactor = Math.max(0.45, Math.cos((Math.abs(current.coord.lat) * Math.PI) / 180));
+  const cloudTransmittance = 1 - (current.clouds.all / 100) * 0.68;
+  const estimatedUV = isDaytime
+    ? Math.max(0, Math.round(11.5 * solarElevationFactor * latFactor * cloudTransmittance))
+    : 0;
 
   const angle = Math.PI - progress * Math.PI;
   const dotX = (80 + 70 * Math.cos(angle)).toFixed(1);
@@ -100,8 +130,12 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
       ? (current.visibility / 1000).toFixed(1)
       : (current.visibility * 0.000621371).toFixed(1);
 
-  // Rain Chance calculation (PoP from first forecast)
+  // Rain Chance & 24h Accumulation calculation
   const nextPoP = forecast?.list?.[0]?.pop ? Math.round(forecast.list[0].pop * 100) : 0;
+  const totalRain24hMm = (forecast?.list || []).slice(0, 8).reduce((acc, item) => {
+    const r3h = item.rain?.['3h'] ?? item.rain?.['1h'] ?? 0;
+    return acc + r3h;
+  }, 0);
 
   return (
     <div className="highlights-grid">
@@ -189,13 +223,15 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
             <span className="metric-sub-unit">/ 5</span>
           </div>
           <div className="aqi-meter">
-            <div className="aqi-step" data-level="1"></div>
-            <div className="aqi-step" data-level="2"></div>
-            <div className="aqi-step" data-level="3"></div>
-            <div className="aqi-step" data-level="4"></div>
-            <div className="aqi-step" data-level="5"></div>
+            {[1, 2, 3, 4, 5].map((lvl) => (
+              <div
+                key={lvl}
+                className={`aqi-step ${aqiScore >= lvl ? 'step-active' : ''}`}
+                data-level={lvl}
+              ></div>
+            ))}
           </div>
-          <div className="aqi-pollutants">
+          <div className="aqi-pollutants aqi-pollutants-grid">
             <span>
               PM2.5: <b>{aqiItem?.components?.pm2_5?.toFixed(1) ?? '--'}</b>
             </span>
@@ -205,17 +241,35 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
             <span>
               O₃: <b>{aqiItem?.components?.o3?.toFixed(1) ?? '--'}</b>
             </span>
+            <span>
+              NO₂: <b>{aqiItem?.components?.no2?.toFixed(1) ?? '--'}</b>
+            </span>
+            <span>
+              SO₂: <b>{aqiItem?.components?.so2?.toFixed(1) ?? '--'}</b>
+            </span>
+            <span>
+              CO: <b>{aqiItem?.components?.co ? Math.round(aqiItem.components.co) : '--'}</b>
+            </span>
           </div>
+          <p className="metric-subtext" style={{ marginTop: '0.4rem', fontSize: '0.74rem' }}>
+            {aqiScore <= 2
+              ? (lang === 'id' ? 'Udara bersih untuk aktivitas pernapasan luar ruang.' : 'Fresh & clean air for all outdoor activities.')
+              : aqiScore === 3
+              ? (lang === 'id' ? 'Kelompok sensitif sebaiknya kurangi latihan berat di luar.' : 'Sensitive individuals should limit strenuous outdoor efforts.')
+              : (lang === 'id' ? 'Gunakan masker pelindung jika beraktivitas lama di luar.' : 'Protective mask recommended for outdoor stays.')}
+          </p>
         </div>
       </div>
 
-      {/* 4. Sun Cycle */}
+      {/* 4. Sun Cycle & UV Telemetry */}
       <div className="glass-card metric-card">
         <div className="metric-header">
           <span className="metric-title">
             <Sun size={16} color="#38bdf8" /> {t.sunCycle}
           </span>
-          <span className="metric-badge">{isDaytime ? t.daytime : t.nighttime}</span>
+          <span className="metric-badge">
+            {isDaytime ? `UV ${estimatedUV} • ${t.daytime}` : t.nighttime}
+          </span>
         </div>
         <div className="metric-body sun-cycle-body">
           <div className="sun-arc-wrap">
@@ -246,6 +300,12 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
                 <span className="sun-val">{sunsetStr}</span>
               </div>
             </div>
+          </div>
+          <div className="sun-meta-footer">
+            <span>
+              {lang === 'id' ? 'Durasi Siang:' : 'Daylight:'} <strong>{daylightDurationStr}</strong>
+            </span>
+            <span>{sunCountdownStr}</span>
           </div>
         </div>
       </div>
@@ -283,40 +343,124 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
         </div>
       </div>
 
-      {/* 6. Pressure */}
-      <div className="glass-card metric-card">
-        <div className="metric-header">
-          <span className="metric-title">
-            <Gauge size={16} color="#38bdf8" /> {t.airPressure}
-          </span>
-          <span className="metric-badge">
-            {current.main.pressure > 1013
-              ? (lang === 'id' ? 'Tinggi' : 'High')
-              : current.main.pressure >= 1005
-              ? (lang === 'id' ? 'Normal' : 'Normal')
-              : (lang === 'id' ? 'Rendah' : 'Low')}
-          </span>
-        </div>
-        <div className="metric-body">
-          <div className="metric-val-group">
-            <span className="metric-main-value">{current.main.pressure}</span>
-            <span className="metric-sub-unit">hPa</span>
+      {/* 6. Air Pressure & Barometer Instrument */}
+      {(() => {
+        const pVal = current.main.pressure;
+        const clampedP = Math.max(975, Math.min(1045, pVal));
+        const needleAngle = ((clampedP - 975) / (1045 - 975)) * 260 - 130;
+
+        let trendText =
+          lang === 'id'
+            ? 'Kondisi stabil, seimbang di dekat standar 1013 hPa.'
+            : 'Balanced conditions near standard 1013 hPa.';
+        let trendBadge = lang === 'id' ? 'Stabil (Normal)' : 'Steady (Normal)';
+        let trendColor = '#38bdf8';
+
+        if (pVal > 1018) {
+          trendText =
+            lang === 'id'
+              ? 'Tekanan tinggi: Atmosfer mantap, pembentukan awan minim.'
+              : 'High pressure: Stable air mass, clear fair skies.';
+          trendBadge = lang === 'id' ? 'Tinggi (Cerah)' : 'High (Fair)';
+          trendColor = '#34d399';
+        } else if (pVal < 1006) {
+          trendText =
+            lang === 'id'
+              ? 'Tekanan rendah: Udara lembap naik, potensi hujan & angin.'
+              : 'Low pressure: Rising moist air, rain & storm risk.';
+          trendBadge = lang === 'id' ? 'Rendah (Hujan)' : 'Low (Rain)';
+          trendColor = '#f87171';
+        }
+
+        return (
+          <div className="glass-card metric-card barometer-card">
+            <div className="metric-header">
+              <span className="metric-title">
+                <Gauge size={16} color="#38bdf8" /> {t.airPressure}
+              </span>
+              <span className="metric-badge" style={{ color: trendColor }}>
+                {pVal > 1013
+                  ? (lang === 'id' ? 'Tinggi' : 'High')
+                  : pVal >= 1005
+                  ? (lang === 'id' ? 'Normal' : 'Normal')
+                  : (lang === 'id' ? 'Rendah' : 'Low')}
+              </span>
+            </div>
+            <div className="metric-body barometer-body">
+              {/* Circular Barometer Instrument Dial (matches Compass layout) */}
+              <div className="barometer-dial-container">
+                <div className="barometer-dial-disc">
+                  <svg className="barometer-dial-svg" viewBox="0 0 76 76" width="76" height="76">
+                    <defs>
+                      <linearGradient id="baroGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#f43f5e" />
+                        <stop offset="35%" stopColor="#38bdf8" />
+                        <stop offset="65%" stopColor="#34d399" />
+                        <stop offset="100%" stopColor="#facc15" />
+                      </linearGradient>
+                    </defs>
+
+                    {/* Scale Arc Track (260 degrees) */}
+                    <path
+                      d="M 18.5 57.5 A 28 28 0 1 1 57.5 57.5"
+                      fill="none"
+                      stroke="rgba(255, 255, 255, 0.12)"
+                      strokeWidth="5"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M 18.5 57.5 A 28 28 0 1 1 57.5 57.5"
+                      fill="none"
+                      stroke="url(#baroGrad)"
+                      strokeWidth="2.5"
+                      strokeDasharray="2 3"
+                      strokeLinecap="round"
+                    />
+
+                    {/* Scale Reference Notches */}
+                    <circle cx="18.5" cy="57.5" r="1.5" fill="#f43f5e" />
+                    <circle cx="38" cy="10" r="1.8" fill="#38bdf8" />
+                    <circle cx="57.5" cy="57.5" r="1.5" fill="#facc15" />
+
+                    {/* Unit Label */}
+                    <text x="38" y="52" fontSize="7" fill="#94a3b8" fontWeight="600" textAnchor="middle">
+                      hPa
+                    </text>
+
+                    {/* Pivot Rotating Needle */}
+                    <g transform={`rotate(${needleAngle}, 38, 38)`}>
+                      <line
+                        x1="38"
+                        y1="38"
+                        x2="38"
+                        y2="14"
+                        stroke="#f43f5e"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                      <circle cx="38" cy="13" r="2" fill="#f43f5e" />
+                      <circle cx="38" cy="38" r="4" fill="#0f172a" stroke="#cbd5e1" strokeWidth="1.5" />
+                      <circle cx="38" cy="38" r="1.5" fill="#f43f5e" />
+                    </g>
+                  </svg>
+                </div>
+              </div>
+
+              {/* Barometer Info Values */}
+              <div className="barometer-info-group">
+                <div className="metric-val-group">
+                  <span className="metric-main-value">{pVal}</span>
+                  <span className="metric-sub-unit">hPa</span>
+                </div>
+                <p className="metric-note">
+                  {lang === 'id' ? 'Indeks' : 'Status'}: <strong>{trendBadge}</strong>
+                </p>
+                <p className="metric-subtext">{trendText}</p>
+              </div>
+            </div>
           </div>
-          <div className="progress-bar-wrap">
-            <div
-              className="progress-bar-fill pressure-fill"
-              style={{ width: `${Math.max(10, Math.min(100, ((current.main.pressure - 960) / 80) * 100))}%` }}
-            ></div>
-          </div>
-          <p className="metric-subtext">
-            {current.main.pressure > 1013
-              ? t.pressureRising
-              : current.main.pressure < 1005
-              ? t.pressureFalling
-              : (lang === 'id' ? 'Tekanan atmosfer barometrik stabil.' : 'Barometric atmospheric pressure is stable.')}
-          </p>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* 7. Cloud Cover */}
       <div className="glass-card metric-card">
@@ -349,7 +493,7 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
         </div>
       </div>
 
-      {/* 8. Rain Chance */}
+      {/* 8. Rain Chance & 24h Accumulation */}
       <div className="glass-card metric-card">
         <div className="metric-header">
           <span className="metric-title">
@@ -371,9 +515,17 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
             ></div>
           </div>
           <p className="metric-subtext">
-            {nextPoP >= 60
-              ? (lang === 'id' ? 'Kemungkinan besar akan turun hujan.' : 'High probability of rain coming soon.')
-              : (lang === 'id' ? 'Peluang turun hujan beberapa jam ke depan.' : 'Precipitation probability over incoming hours.')}
+            {totalRain24hMm > 0
+              ? lang === 'id'
+                ? `Estimasi akumulasi 24 jam: ${totalRain24hMm.toFixed(1)} mm.`
+                : `Est. 24h rainfall accumulation: ${totalRain24hMm.toFixed(1)} mm.`
+              : nextPoP >= 60
+                ? lang === 'id'
+                  ? 'Kemungkinan besar akan turun hujan.'
+                  : 'High probability of rain coming soon.'
+                : lang === 'id'
+                  ? 'Peluang turun hujan beberapa jam ke depan.'
+                  : 'Precipitation probability over incoming hours.'}
           </p>
         </div>
       </div>

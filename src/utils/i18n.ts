@@ -51,6 +51,13 @@ export interface Translations {
   chartSubtitle: string;
   tempTrend: string;
   rainChance: string;
+  chartTempMode: string;
+  chartRainMode: string;
+  chartWindMode: string;
+  chartPeak: string;
+  chartLowest: string;
+  chartAverage: string;
+  chartFeelsLike: string;
 
   // Metric Cards
   metricsTitle: string;
@@ -224,7 +231,7 @@ export const DICTIONARIES: Record<Language, Translations> = {
     voiceSearchListening: 'Mendengarkan suara...',
     voiceSearchError: 'Tidak dapat mengenali suara.',
     notificationsTooltip: 'Aktifkan Notifikasi Cuaca',
-    notificationsEnabled: 'Notifikasi cuaca berhasil diaktifkan!',
+    notificationsEnabled: 'Notifikasi peringatan cuaca aktif.',
     notificationsDenied: 'Izin notifikasi ditolak oleh browser.',
 
     popularCities: 'Kota Populer',
@@ -254,6 +261,13 @@ export const DICTIONARIES: Record<Language, Translations> = {
     chartSubtitle: 'Geser kursor atau sentuh grafik untuk melihat rincian',
     tempTrend: 'Suhu Udara',
     rainChance: 'Peluang Hujan',
+    chartTempMode: 'Suhu & Sensasi',
+    chartRainMode: 'Peluang Hujan',
+    chartWindMode: 'Kecepatan Angin',
+    chartPeak: 'Puncak',
+    chartLowest: 'Terendah',
+    chartAverage: 'Rata-rata',
+    chartFeelsLike: 'Terasa',
 
     metricsTitle: 'Sorotan Kondisi Atmosfer',
     windAndDirection: 'Angin & Arah',
@@ -443,15 +457,28 @@ export const DICTIONARIES: Record<Language, Translations> = {
       'light thunderstorm': 'Badai Petir Ringan',
       'thunderstorm': 'Badai Petir',
       'heavy thunderstorm': 'Badai Petir Kuat',
-      'light snow': 'Salju Ringan',
-      'snow': 'Salju',
-      'heavy snow': 'Salju Lebat',
+      'ragged thunderstorm': 'Badai Petir Tidak Beraturan',
+      'light snow': 'Bersalju Ringan',
+      'snow': 'Bersalju',
+      'heavy snow': 'Badai Salju Lebat',
+      'sleet': 'Hujan Es / Salju Campur',
+      'light shower sleet': 'Gerimis Salju Es',
+      'shower sleet': 'Hujan Salju Es',
+      'light rain and snow': 'Hujan Campur Salju Ringan',
+      'rain and snow': 'Hujan Campur Salju',
+      'light shower snow': 'Hujan Salju Ringan',
+      'shower snow': 'Hujan Salju Guyur',
+      'heavy shower snow': 'Badai Salju Deras (Blizzard)',
       'mist': 'Berkabut Tipis (Mist)',
       'smoke': 'Berasap',
       'haze': 'Kabut Udara (Haze)',
+      'sand/dust whirls': 'Pusaran Debu / Pasir',
       'fog': 'Kabut Tebal (Fog)',
       'sand': 'Badai Pasir',
       'dust': 'Berdebu',
+      'volcanic ash': 'Abu Vulkanik',
+      'squalls': 'Badai Angin Kencang (Squall)',
+      'tornado': 'Angin Puting Beliung / Tornado',
     },
   },
 
@@ -471,7 +498,7 @@ export const DICTIONARIES: Record<Language, Translations> = {
     voiceSearchListening: 'Listening for city name...',
     voiceSearchError: 'Could not recognize voice.',
     notificationsTooltip: 'Enable Weather Alerts',
-    notificationsEnabled: 'Weather notifications enabled!',
+    notificationsEnabled: 'Weather alert notifications are active.',
     notificationsDenied: 'Notifications permission denied by browser.',
 
     popularCities: 'Popular Cities',
@@ -501,6 +528,13 @@ export const DICTIONARIES: Record<Language, Translations> = {
     chartSubtitle: 'Hover or touch along the curve to inspect hour-by-hour metrics',
     tempTrend: 'Temperature',
     rainChance: 'Precipitation Chance',
+    chartTempMode: 'Temp & Feels',
+    chartRainMode: 'Rain Chance',
+    chartWindMode: 'Wind Speed',
+    chartPeak: 'Peak',
+    chartLowest: 'Lowest',
+    chartAverage: 'Average',
+    chartFeelsLike: 'Feels like',
 
     metricsTitle: 'Atmospheric Highlights',
     windAndDirection: 'Wind & Direction',
@@ -690,15 +724,28 @@ export const DICTIONARIES: Record<Language, Translations> = {
       'light thunderstorm': 'Light Thunderstorm',
       'thunderstorm': 'Thunderstorm',
       'heavy thunderstorm': 'Severe Thunderstorm',
+      'ragged thunderstorm': 'Ragged Thunderstorm',
       'light snow': 'Light Snow',
-      'snow': 'Snow',
-      'heavy snow': 'Heavy Snow',
+      'snow': 'Snowing',
+      'heavy snow': 'Heavy Snow / Blizzard',
+      'sleet': 'Sleet / Ice Pellets',
+      'light shower sleet': 'Light Sleet Showers',
+      'shower sleet': 'Sleet Showers',
+      'light rain and snow': 'Light Rain and Snow',
+      'rain and snow': 'Rain and Snow',
+      'light shower snow': 'Light Snow Showers',
+      'shower snow': 'Snow Showers',
+      'heavy shower snow': 'Heavy Blizzard Squall',
       'mist': 'Mist',
       'smoke': 'Smoke',
       'haze': 'Haze',
+      'sand/dust whirls': 'Sand / Dust Whirls',
       'fog': 'Dense Fog',
       'sand': 'Sandstorm',
       'dust': 'Dust',
+      'volcanic ash': 'Volcanic Ash',
+      'squalls': 'Wind Squalls',
+      'tornado': 'Tornado',
     },
   },
 };

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Outfit, Plus_Jakarta_Sans } from 'next/font/google';
+import { Outfit, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
 import { PwaRegister } from '@/components/PwaRegister';
 import './globals.css';
 
@@ -15,10 +15,16 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   display: 'swap',
 });
 
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
-  title: 'Aether Weather — Dashboard Cuaca Modern Next.js',
+  title: 'WeatherAether — Stasiun Cuaca & Prakiraan Atmosfer',
   description:
-    'Aplikasi cuaca modern dengan Next.js App Router, real-time forecast, prakiraan per jam, 5 hari ke depan, indeks kualitas udara (AQI), astronomi fase bulan, dan radar dinamis.',
+    'Instrumen pemantauan cuaca real-time, prakiraan per jam, tren temperatur 24 jam, indeks kualitas udara (AQI), astronomi fase bulan, dan radar presipitasi.',
   manifest: '/manifest.json',
   icons: {
     icon: '/icon.svg',
@@ -40,7 +46,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id" className={`${outfit.variable} ${plusJakartaSans.variable}`}>
+    <html lang="id" className={`${outfit.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable}`}>
       <body>
         <PwaRegister />
         {children}
