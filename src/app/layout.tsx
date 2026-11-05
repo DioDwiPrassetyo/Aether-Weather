@@ -1,36 +1,50 @@
 import type { Metadata, Viewport } from 'next';
-import { Outfit, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
+import { Bricolage_Grotesque, Instrument_Sans, Geist_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { PwaRegister } from '@/components/PwaRegister';
 import './globals.css';
 
-const outfit = Outfit({
+const bricolageGrotesque = Bricolage_Grotesque({
   subsets: ['latin'],
-  variable: '--font-heading',
+  variable: '--font-bricolage',
   display: 'swap',
 });
 
-const plusJakartaSans = Plus_Jakarta_Sans({
+const instrumentSans = Instrument_Sans({
   subsets: ['latin'],
-  variable: '--font-body',
+  variable: '--font-instrument',
   display: 'swap',
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const geistMono = Geist_Mono({
   subsets: ['latin'],
-  variable: '--font-mono',
+  variable: '--font-geist-mono',
   display: 'swap',
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || 'https://weatheraether.vercel.app'
+  ),
   title: 'WeatherAether — Stasiun Cuaca & Prakiraan Atmosfer',
   description:
-    'Instrumen pemantauan cuaca real-time, prakiraan per jam, tren temperatur 24 jam, indeks kualitas udara (AQI), astronomi fase bulan, dan radar presipitasi.',
+    'Instrumen pemantauan cuaca real-time, prakiraan per jam, tren temperatur 24 jam, indeks kualitas udara (AQI), aviasi drone, pasang surut laut, dan radar presipitasi.',
   manifest: '/manifest.json',
   icons: {
     icon: '/icon.svg',
     apple: '/icon.svg',
+  },
+  openGraph: {
+    title: 'WeatherAether — Stasiun Cuaca & Intelijen Atmosfer',
+    description:
+      'Pantau cuaca real-time, radar Doppler, indeks terbang drone, pasang surut laut, dan arsip iklim 50 tahun.',
+    images: [{ url: '/api/og?city=Jakarta', width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'WeatherAether — Stasiun Cuaca & Intelijen Atmosfer',
+    images: ['/api/og?city=Jakarta'],
   },
 };
 
@@ -48,7 +62,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id" className={`${outfit.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable}`}>
+    <html
+      lang="id"
+      className={`${bricolageGrotesque.variable} ${instrumentSans.variable} ${geistMono.variable}`}
+    >
       <body>
         <PwaRegister />
         {children}

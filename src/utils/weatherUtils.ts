@@ -8,6 +8,7 @@ import {
   WeatherTheme,
   TimeOfDay,
 } from '@/types/weather';
+import { Language, getTranslation } from '@/utils/i18n';
 
 export const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY?.trim() || '';
 export const MAP_API_KEY =
@@ -28,59 +29,30 @@ export function getApiKey(): string {
 }
 
 export const I18N = {
-  descriptions: {
-    'clear sky': 'Cerah Bersih',
-    'few clouds': 'Cerah Berawan Tipis',
-    'scattered clouds': 'Awan Tersebar',
-    'broken clouds': 'Berawan Sebagian',
-    'overcast clouds': 'Mendung Tebal',
-    'light rain': 'Hujan Ringan',
-    'moderate rain': 'Hujan Sedang',
-    'heavy intensity rain': 'Hujan Lebat',
-    'very heavy rain': 'Hujan Sangat Deras',
-    'extreme rain': 'Hujan Ekstrem',
-    'freezing rain': 'Hujan Beku',
-    'light intensity shower rain': 'Gerimis Ringan',
-    'shower rain': 'Hujan Guyur',
-    'heavy intensity shower rain': 'Hujan Deras Guyur',
-    'thunderstorm with light rain': 'Badai Petir & Hujan Ringan',
-    'thunderstorm with rain': 'Badai Petir & Hujan',
-    'thunderstorm with heavy rain': 'Badai Petir & Hujan Lebat',
-    'light thunderstorm': 'Badai Petir Ringan',
-    'thunderstorm': 'Badai Petir',
-    'heavy thunderstorm': 'Badai Petir Kuat',
-    'ragged thunderstorm': 'Badai Petir Tidak Beraturan',
-    'light snow': 'Bersalju Ringan',
-    'snow': 'Bersalju',
-    'heavy snow': 'Badai Salju Lebat',
-    'sleet': 'Hujan Es / Salju Campur',
-    'light shower sleet': 'Gerimis Salju Es',
-    'shower sleet': 'Hujan Salju Es',
-    'light rain and snow': 'Hujan Campur Salju Ringan',
-    'rain and snow': 'Hujan Campur Salju',
-    'light shower snow': 'Hujan Salju Ringan',
-    'shower snow': 'Hujan Salju Guyur',
-    'heavy shower snow': 'Badai Salju Deras (Blizzard)',
-    'mist': 'Berkabut Tipis (Mist)',
-    'smoke': 'Berasap',
-    'haze': 'Kabut Udara (Haze)',
-    'sand/dust whirls': 'Pusaran Debu / Pasir',
-    'fog': 'Kabut Tebal (Fog)',
-    'sand': 'Badai Pasir',
-    'dust': 'Berdebu',
-    'volcanic ash': 'Abu Vulkanik',
-    'squalls': 'Badai Angin Kencang (Squall)',
-    'tornado': 'Angin Puting Beliung / Tornado',
-  } as Record<string, string>,
+  currentLang: 'id' as Language,
 
-  translate(desc: string): string {
-    if (!desc) return '--';
-    const lower = desc.toLowerCase().trim();
-    return this.descriptions[lower] || desc;
+  setLanguage(lang: Language) {
+    this.currentLang = lang;
   },
 
-  days: ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'],
-  months: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+  get descriptions(): Record<string, string> {
+    return getTranslation(this.currentLang).descriptions;
+  },
+
+  translate(desc: string, langOverride?: Language): string {
+    if (!desc) return '--';
+    const lower = desc.toLowerCase().trim();
+    const dict = getTranslation(langOverride || this.currentLang);
+    return dict.descriptions[lower] || desc;
+  },
+
+  get days(): string[] {
+    return getTranslation(this.currentLang).days;
+  },
+
+  get months(): string[] {
+    return getTranslation(this.currentLang).months;
+  },
 };
 
 export async function fetchCurrentWeather(
@@ -446,20 +418,23 @@ export function getThemeFromWeather(
 }
 
 export function getCardinalDirection(angle: number | undefined): string {
-  if (angle === undefined || angle === null) return 'U';
-  const directions = ['U', 'TL', 'T', 'TG', 'S', 'BD', 'B', 'BL'];
+  const isIdOrMs = I18N.currentLang === 'id' || I18N.currentLang === 'ms';
+  const directions = isIdOrMs
+    ? ['U', 'TL', 'T', 'TG', 'S', 'BD', 'B', 'BL']
+    : ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  if (angle === undefined || angle === null) return directions[0];
   const index = Math.round(((angle %= 360) < 0 ? angle + 360 : angle) / 45) % 8;
   return directions[index];
 }
 
 export function getBeaufortScale(mps: number | undefined): string {
-  if (!mps) return 'Tenang';
-  if (mps < 0.5) return 'Tenang';
-  if (mps < 1.5) return 'Tenang Sekali';
-  if (mps < 3.3) return 'Semilir Ringan';
-  if (mps < 5.5) return 'Semilir Lembut';
-  if (mps < 8.0) return 'Angin Sedang';
-  if (mps < 10.8) return 'Angin Segar';
-  if (mps < 13.9) return 'Angin Kuat';
-  return 'Angin Sangat Kencang';
+  const isId = I18N.currentLang === 'id' || I18N.currentLang === 'ms';
+  if (!mps || mps < 0.5) return isId ? 'Tenang' : 'Calm';
+  if (mps < 1.5) return isId ? 'Tenang Sekali' : 'Light Air';
+  if (mps < 3.3) return isId ? 'Semilir Ringan' : 'Light Breeze';
+  if (mps < 5.5) return isId ? 'Semilir Lembut' : 'Gentle Breeze';
+  if (mps < 8.0) return isId ? 'Angin Sedang' : 'Moderate Breeze';
+  if (mps < 10.8) return isId ? 'Angin Segar' : 'Fresh Breeze';
+  if (mps < 13.9) return isId ? 'Angin Kuat' : 'Strong Breeze';
+  return isId ? 'Angin Sangat Kencang' : 'High Wind';
 }

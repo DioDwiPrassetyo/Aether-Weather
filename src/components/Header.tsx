@@ -15,12 +15,18 @@ import {
   History,
   Trash2,
   Mic,
-  MicOff,
   Bell,
   BellRing,
+  Check,
+  Sparkles,
 } from 'lucide-react';
 import { GeocodingResult, UnitType } from '@/types/weather';
-import { Language, getTranslation } from '@/utils/i18n';
+import {
+  Language,
+  SUPPORTED_LANGUAGES,
+  getLanguageMeta,
+  getTranslation,
+} from '@/utils/i18n';
 import { searchGeocoding } from '@/utils/weatherUtils';
 import {
   WeatherAlertPreferences,
@@ -92,6 +98,7 @@ export const Header: React.FC<HeaderProps> = ({
   windSpeedKmh = 10,
 }) => {
   const currentLang = lang || 'id';
+  const currentLangMeta = getLanguageMeta(currentLang);
   const t = getTranslation(currentLang);
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<GeocodingResult[]>([]);
@@ -99,6 +106,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [isSearching, setIsSearching] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showAlertSettings, setShowAlertSettings] = useState(false);
+  const [showLangMenu, setShowLangMenu] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isListening, setIsListening] = useState(false);
@@ -118,6 +126,7 @@ export const Header: React.FC<HeaderProps> = ({
   const geocodeControllerRef = useRef<AbortController | null>(null);
   const geocodeRequestRef = useRef(0);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const langMenuRef = useRef<HTMLDivElement | null>(null);
   const recognitionRef = useRef<any>(null);
 
   // Check speech recognition & notification support on mount
@@ -160,7 +169,7 @@ export const Header: React.FC<HeaderProps> = ({
       const recognition = new SpeechRecognition();
       recognition.continuous = false;
       recognition.interimResults = false;
-      recognition.lang = currentLang === 'id' ? 'id-ID' : 'en-US';
+      recognition.lang = currentLangMeta.speechLang;
 
       recognition.onstart = () => {
         setIsListening(true);
@@ -261,6 +270,9 @@ export const Header: React.FC<HeaderProps> = ({
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setShowSuggestions(false);
         setIsInputFocused(false);
+      }
+      if (langMenuRef.current && !langMenuRef.current.contains(e.target as Node)) {
+        setShowLangMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -387,8 +399,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const toggleLanguage = () => {
-    const nextLang: Language = currentLang === 'id' ? 'en' : 'id';
-    onLangChange(nextLang);
+    setShowLangMenu((prev) => !prev);
   };
 
   const shouldShowRecent = isInputFocused && !query.trim() && recentSearches.length > 0;
@@ -592,18 +603,51 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </button>
 
-        {/* Language Switcher (ID / EN) */}
-        <button
-          className="control-btn lang-toggle-btn"
-          onClick={toggleLanguage}
-          title={`Ganti Bahasa (Sekarang: ${currentLang.toUpperCase()})`}
-          aria-label={
-            currentLang === 'id' ? 'Ubah bahasa tampilan' : 'Change display language'
-          }
-        >
-          <Globe size={16} color="#38bdf8" />
-          <span className="lang-label">{currentLang.toUpperCase()}</span>
-        </button>
+        {/* Multi-Language Switcher (12 World Languages) */}
+        <div className="lang-menu-wrapper" ref={langMenuRef}>
+          <button
+            type="button"
+            className={`control-btn lang-toggle-btn ${showLangMenu ? 'active' : ''}`}
+            onClick={toggleLanguage}
+            title={`${currentLangMeta.flag} ${currentLangMeta.nativeName}`}
+            aria-label="Change display language"
+            aria-expanded={showLangMenu}
+            aria-haspopup="listbox"
+          >
+            <Globe size={15} color="#38bdf8" />
+            <span className="lang-label">{currentLang.toUpperCase()}</span>
+          </button>
+
+          {showLangMenu && (
+            <div className="lang-popover-menu" role="listbox" aria-label="Select Language">
+              <div className="lang-popover-grid">
+                {SUPPORTED_LANGUAGES.map((item) => {
+                  const isCurrentEffective = item.code === currentLang;
+                  return (
+                    <button
+                      type="button"
+                      key={item.code}
+                      role="option"
+                      aria-selected={isCurrentEffective}
+                      className={`lang-option-item ${isCurrentEffective ? 'active' : ''}`}
+                      onClick={() => {
+                        onLangChange(item.code);
+                        setShowLangMenu(false);
+                      }}
+                    >
+                      <span className="lang-option-flag">{item.flag}</span>
+                      <div className="lang-option-text">
+                        <span className="lang-option-native">{item.nativeName}</span>
+                        <span className="lang-option-code">{item.code.toUpperCase()}</span>
+                      </div>
+                      {isCurrentEffective && <Check size={13} color="#38bdf8" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* City Comparison Button */}
         <button
@@ -624,7 +668,7 @@ export const Header: React.FC<HeaderProps> = ({
           aria-label={t.shareWeather}
         >
           <Share2 size={16} />
-          <span className="control-btn-text">{lang === 'id' ? 'Bagikan' : 'Share'}</span>
+          <span className="control-btn-text">{t.shareWeather}</span>
         </button>
 
         {/* Temperature Unit Toggle (°C / °F) */}

@@ -17,6 +17,8 @@ import {
   X,
 } from 'lucide-react';
 
+import { Language } from '@/utils/i18n';
+
 export type AmbientSoundPreset =
   | 'auto'
   | 'calm'
@@ -30,7 +32,7 @@ interface AmbientSoundEngineProps {
   weatherId?: number;
   isNight?: boolean;
   windSpeedKmh?: number;
-  lang?: 'id' | 'en';
+  lang?: Language;
 }
 
 export const AmbientSoundEngine: React.FC<AmbientSoundEngineProps> = ({
@@ -463,6 +465,7 @@ export const AmbientSoundEngine: React.FC<AmbientSoundEngineProps> = ({
   }, [isOpen]);
 
   const activeMode = resolvedMode();
+  const langKey: 'id' | 'en' = lang === 'id' || lang === 'ms' ? 'id' : 'en';
   const presetLabels: Record<string, { id: string; en: string }> = {
     auto: { id: 'Sinkron Cuaca', en: 'Auto Sync' },
     calm: { id: 'Alam Damai', en: 'Peaceful Nature' },
@@ -483,10 +486,10 @@ export const AmbientSoundEngine: React.FC<AmbientSoundEngineProps> = ({
           onClick={handleTogglePlay}
           title={
             isPlaying
-              ? lang === 'id'
+              ? langKey === 'id'
                 ? 'Jeda Suara Atmosfer'
                 : 'Pause Ambient Sound'
-              : lang === 'id'
+              : langKey === 'id'
               ? 'Putar Suara Cuaca Organik'
               : 'Play Organic Weather Sound'
           }
@@ -504,8 +507,8 @@ export const AmbientSoundEngine: React.FC<AmbientSoundEngineProps> = ({
           )}
           <span className="ambient-play-label">
             {isPlaying
-              ? (preset === 'auto' ? presetLabels[activeMode]?.[lang] : presetLabels[preset]?.[lang]) || (lang === 'id' ? 'Aktif' : 'Active')
-              : lang === 'id'
+              ? (preset === 'auto' ? presetLabels[activeMode]?.[langKey] : presetLabels[preset]?.[langKey]) || (langKey === 'id' ? 'Aktif' : 'Active')
+              : langKey === 'id'
               ? 'Suara Alami'
               : 'Soundscape'}
           </span>

@@ -15,6 +15,7 @@ import {
   Leaf,
   Eye,
   Sunrise,
+  Sunset,
   MapPin,
   Clock,
   Sparkles,
@@ -337,18 +338,36 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
       ctx.translate(artCenterX, artCenterY);
       ctx.scale(scale, scale);
 
+      // Subtle Orbital Telemetry Pedestal Ring behind Weather Art
+      const pedestalGlow = ctx.createRadialGradient(0, 0, 12, 0, 0, 118);
+      pedestalGlow.addColorStop(0, theme.nebulaTopRgba);
+      pedestalGlow.addColorStop(0.65, 'rgba(56, 189, 248, 0.06)');
+      pedestalGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = pedestalGlow;
+      ctx.beginPath();
+      ctx.arc(0, 0, 118, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.10)';
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([5, 6]);
+      ctx.beginPath();
+      ctx.arc(0, 0, 96, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
       const id = condition.id;
 
       if (id === 800) {
         if (!isNight) {
           // Clear Day: Golden Starlight Sun with Radiating Corona
-          const sunCorona = ctx.createRadialGradient(0, 0, 18, 0, 0, 130);
-          sunCorona.addColorStop(0, 'rgba(254, 240, 138, 0.55)');
-          sunCorona.addColorStop(0.5, 'rgba(245, 158, 11, 0.22)');
+          const sunCorona = ctx.createRadialGradient(0, 0, 18, 0, 0, 125);
+          sunCorona.addColorStop(0, 'rgba(254, 240, 138, 0.58)');
+          sunCorona.addColorStop(0.5, 'rgba(245, 158, 11, 0.24)');
           sunCorona.addColorStop(1, 'rgba(0, 0, 0, 0)');
           ctx.fillStyle = sunCorona;
           ctx.beginPath();
-          ctx.arc(0, 0, 130, 0, Math.PI * 2);
+          ctx.arc(0, 0, 125, 0, Math.PI * 2);
           ctx.fill();
 
           // 12 Starlight Rays
@@ -357,8 +376,8 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
           ctx.lineCap = 'round';
           for (let i = 0; i < 12; i++) {
             const angle = (i * Math.PI) / 6;
-            const innerR = 72;
-            const outerR = i % 2 === 0 ? 102 : 88;
+            const innerR = 68;
+            const outerR = i % 2 === 0 ? 96 : 82;
             ctx.beginPath();
             ctx.moveTo(Math.cos(angle) * innerR, Math.sin(angle) * innerR);
             ctx.lineTo(Math.cos(angle) * outerR, Math.sin(angle) * outerR);
@@ -366,39 +385,39 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
           }
 
           // Sun Core
-          const sunCore = ctx.createRadialGradient(-14, -14, 0, 0, 0, 60);
+          const sunCore = ctx.createRadialGradient(-14, -14, 0, 0, 0, 56);
           sunCore.addColorStop(0, '#ffffff');
           sunCore.addColorStop(0.35, '#fef08a');
           sunCore.addColorStop(0.85, '#f59e0b');
           sunCore.addColorStop(1, '#d97706');
           ctx.fillStyle = sunCore;
           ctx.beginPath();
-          ctx.arc(0, 0, 60, 0, Math.PI * 2);
+          ctx.arc(0, 0, 56, 0, Math.PI * 2);
           ctx.fill();
         } else {
           // Clear Night: 3D Celestial Moon with Starlight Corona
-          const moonCorona = ctx.createRadialGradient(0, 0, 28, 0, 0, 125);
+          const moonCorona = ctx.createRadialGradient(0, 0, 28, 0, 0, 120);
           moonCorona.addColorStop(0, 'rgba(254, 240, 138, 0.38)');
           moonCorona.addColorStop(0.5, 'rgba(56, 189, 248, 0.14)');
           moonCorona.addColorStop(1, 'rgba(0, 0, 0, 0)');
           ctx.fillStyle = moonCorona;
           ctx.beginPath();
-          ctx.arc(0, 0, 125, 0, Math.PI * 2);
+          ctx.arc(0, 0, 120, 0, Math.PI * 2);
           ctx.fill();
 
           ctx.fillStyle = '#1e293b';
           ctx.beginPath();
-          ctx.arc(0, 0, 62, 0, Math.PI * 2);
+          ctx.arc(0, 0, 58, 0, Math.PI * 2);
           ctx.fill();
 
-          const moonLit = ctx.createRadialGradient(24, -15, 0, 0, 0, 62);
+          const moonLit = ctx.createRadialGradient(22, -14, 0, 0, 0, 58);
           moonLit.addColorStop(0, '#ffffff');
           moonLit.addColorStop(0.55, '#fef08a');
           moonLit.addColorStop(1, '#cbd5e1');
           ctx.fillStyle = moonLit;
           ctx.beginPath();
-          ctx.arc(0, 0, 62, -Math.PI / 2, Math.PI / 2, false);
-          ctx.bezierCurveTo(10, 42, 10, -42, 0, -62);
+          ctx.arc(0, 0, 58, -Math.PI / 2, Math.PI / 2, false);
+          ctx.bezierCurveTo(10, 40, 10, -40, 0, -58);
           ctx.fill();
         }
       } else if (id >= 200 && id < 300) {
@@ -569,35 +588,64 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
           ctx.stroke();
         });
       } else {
-        // Clouds / Partly Cloudy
+        // Clouds / Partly Cloudy (Volumetric 3D Sun + Luminous Multi-Layer Cloud)
         if (!isNight) {
-          ctx.fillStyle = '#fef08a';
+          const sunGlow = ctx.createRadialGradient(-26, -28, 8, -26, -28, 72);
+          sunGlow.addColorStop(0, 'rgba(254, 240, 138, 0.65)');
+          sunGlow.addColorStop(0.55, 'rgba(251, 191, 36, 0.22)');
+          sunGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          ctx.fillStyle = sunGlow;
           ctx.beginPath();
-          ctx.arc(38, -38, 40, 0, Math.PI * 2);
+          ctx.arc(-26, -28, 72, 0, Math.PI * 2);
+          ctx.fill();
+
+          const sunOrb = ctx.createRadialGradient(-34, -36, 2, -26, -28, 38);
+          sunOrb.addColorStop(0, '#ffffff');
+          sunOrb.addColorStop(0.4, '#fef08a');
+          sunOrb.addColorStop(0.85, '#f59e0b');
+          sunOrb.addColorStop(1, '#d97706');
+          ctx.fillStyle = sunOrb;
+          ctx.beginPath();
+          ctx.arc(-26, -28, 38, 0, Math.PI * 2);
           ctx.fill();
         } else {
-          ctx.fillStyle = '#bae6fd';
+          const moonGlow = ctx.createRadialGradient(-24, -28, 6, -24, -28, 64);
+          moonGlow.addColorStop(0, 'rgba(186, 230, 253, 0.45)');
+          moonGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          ctx.fillStyle = moonGlow;
           ctx.beginPath();
-          ctx.arc(38, -38, 34, 0, Math.PI * 2);
+          ctx.arc(-24, -28, 64, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#e0f2fe';
+          ctx.beginPath();
+          ctx.arc(-24, -28, 32, 0, Math.PI * 2);
           ctx.fill();
         }
 
-        const cloudGrad = ctx.createLinearGradient(0, -50, 0, 42);
-        cloudGrad.addColorStop(0, '#e2e8f0');
-        cloudGrad.addColorStop(1, '#475569');
+        const cloudGrad = ctx.createLinearGradient(0, -36, 0, 44);
+        cloudGrad.addColorStop(0, '#ffffff');
+        cloudGrad.addColorStop(0.55, '#e2e8f0');
+        cloudGrad.addColorStop(1, '#94a3b8');
         ctx.fillStyle = cloudGrad;
 
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+        ctx.shadowBlur = 18;
+        ctx.shadowOffsetY = 8;
+
         ctx.beginPath();
-        ctx.arc(-34, -14, 46, 0, Math.PI * 2);
-        ctx.arc(28, -30, 56, 0, Math.PI * 2);
-        ctx.arc(72, 5, 38, 0, Math.PI * 2);
-        ctx.arc(-68, 10, 34, 0, Math.PI * 2);
+        ctx.arc(-22, 4, 34, 0, Math.PI * 2);
+        ctx.arc(18, -10, 44, 0, Math.PI * 2);
+        ctx.arc(54, 8, 30, 0, Math.PI * 2);
+        ctx.rect(-22, 4, 76, 34);
         ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
       }
 
       ctx.restore();
     },
-    [condition.id, isNight]
+    [condition.id, isNight, theme.nebulaTopRgba]
   );
 
   // Render High-Resolution Canvas Card (supports 16:9 Landscape 1200x675 & 4:5 Portrait 1080x1350)
@@ -682,13 +730,22 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
     const innerX = pad + 42;
     const innerRightX = w - pad - 42;
 
+    const rootStyles =
+      typeof window !== 'undefined' ? getComputedStyle(document.documentElement) : null;
+    const headingFont =
+      rootStyles?.getPropertyValue('--font-heading').trim() ||
+      '"Bricolage Grotesque", "Instrument Sans", sans-serif';
+    const bodyFont =
+      rootStyles?.getPropertyValue('--font-body').trim() ||
+      '"Instrument Sans", -apple-system, sans-serif';
+
     // 5. Top Header Bar
     ctx.fillStyle = theme.accentHex;
-    ctx.font = 'bold 23px Outfit, "Plus Jakarta Sans", sans-serif';
+    ctx.font = `bold 23px ${headingFont}`;
     ctx.fillText('✦ WEATHERAETHER', innerX, pad + 52);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.64)';
-    ctx.font = '500 14px "Plus Jakarta Sans", sans-serif';
+    ctx.font = `500 14px ${bodyFont}`;
     ctx.fillText(
       showCoords ? `${t.brandSubtitle}  •  📍 ${coordsText}` : t.brandSubtitle,
       innerX,
@@ -698,11 +755,15 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
     // Date & Local Observation Clock (Top-Right)
     ctx.textAlign = 'right';
     ctx.fillStyle = theme.accentSecondaryHex;
-    ctx.font = '700 17px "Plus Jakarta Sans", sans-serif';
+    ctx.font = `700 17px ${bodyFont}`;
     ctx.fillText(`${timeFormatted}  •  ${dateFormatted}`, innerRightX, pad + 56);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
-    ctx.font = '600 13px "Plus Jakarta Sans", sans-serif';
-    ctx.fillText(`🌅 ${sunriseStr}   🌇 ${sunsetStr}`, innerRightX, pad + 78);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.62)';
+    ctx.font = `600 13px ${bodyFont}`;
+    ctx.fillText(
+      `☀ ${lang === 'id' ? 'Fajar' : 'Rise'} ${sunriseStr}   •   ☾ ${lang === 'id' ? 'Senja' : 'Set'} ${sunsetStr}`,
+      innerRightX,
+      pad + 78
+    );
     ctx.textAlign = 'left';
 
     // Divider Line
@@ -718,37 +779,37 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
         label: t.wind,
         val: `${windDisplay} ${speedUnit}`,
         sub: `${lang === 'id' ? 'Arah' : 'Dir'} ${windDir}`,
-        icon: '💨',
+        icon: '≈',
       },
       {
         label: t.humidity,
         val: `${weather.main.humidity}%`,
         sub: `${lang === 'id' ? 'Embun' : 'Dew'} ${dewPointDisplay}`,
-        icon: '💧',
+        icon: '◈',
       },
       {
         label: t.airPressure,
         val: `${weather.main.pressure} hPa`,
         sub: weather.main.pressure >= 1013 ? 'Normal-Tinggi' : 'Rendah',
-        icon: '🧭',
+        icon: '◎',
       },
       {
-        label: 'AQI',
-        val: aqiLabel,
+        label: lang === 'id' ? 'Kualitas Udara' : 'Air Quality',
+        val: `AQI ${aqiLabel}`,
         sub: `Indeks #${aqiScore}/5`,
-        icon: '🍃',
+        icon: '✦',
       },
       {
         label: lang === 'id' ? 'Jarak Pandang' : 'Visibility',
         val: `${visibilityKm} km`,
         sub: Number(visibilityKm) >= 8 ? (lang === 'id' ? 'Jernih' : 'Clear') : 'Terbatas',
-        icon: '👁️',
+        icon: '◉',
       },
       {
-        label: lang === 'id' ? 'Matahari' : 'Sun Cycle',
+        label: lang === 'id' ? 'Siklus Surya' : 'Sun Cycle',
         val: `${sunriseStr} / ${sunsetStr}`,
         sub: lang === 'id' ? 'Terbit & Terbenam' : 'Sunrise & Sunset',
-        icon: '☀️',
+        icon: '☀',
       },
     ];
 
@@ -758,12 +819,12 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
       // ======================================================================
       // City Name
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 46px Outfit, "Plus Jakarta Sans", sans-serif';
+      ctx.font = `bold 46px ${headingFont}`;
       ctx.fillText(`${weather.name}, ${weather.sys.country}`, innerX, pad + 160);
 
       // Condition Pill
       const pillText = translatedDesc.toUpperCase();
-      ctx.font = '700 14px "Plus Jakarta Sans", sans-serif';
+      ctx.font = `700 14px ${bodyFont}`;
       const pillW = ctx.measureText(pillText).width + 34;
       const pillH = 32;
       const pillY = pad + 178;
@@ -781,18 +842,18 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
 
       // Huge Main Temperature
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 104px Outfit, "Plus Jakarta Sans", sans-serif';
+      ctx.font = `bold 104px ${headingFont}`;
       const tempNumStr = `${Math.round(weather.main.temp)}`;
       ctx.fillText(tempNumStr, innerX, pad + 318);
 
       const tempNumWidth = ctx.measureText(tempNumStr).width;
       ctx.fillStyle = theme.accentHex;
-      ctx.font = '700 44px Outfit, "Plus Jakarta Sans", sans-serif';
+      ctx.font = `700 44px ${headingFont}`;
       ctx.fillText(unitSymbol, innerX + 6 + tempNumWidth, pad + 264);
 
       // Feels Like & High/Low Range
       ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-      ctx.font = '600 19px "Plus Jakarta Sans", sans-serif';
+      ctx.font = `600 19px ${bodyFont}`;
       ctx.fillText(
         `${t.feelsLike} ${Math.round(weather.main.feels_like)}°   •   Max ${Math.round(
           weather.main.temp_max
@@ -805,7 +866,7 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
       if (customNote.trim()) {
         const noteStr = `"${customNote.trim().slice(0, 78)}"`;
         ctx.fillStyle = theme.accentHex;
-        ctx.font = 'italic 600 16px "Plus Jakarta Sans", sans-serif';
+        ctx.font = `italic 600 16px ${bodyFont}`;
         ctx.fillText(noteStr, innerX, pad + 388);
       }
 
@@ -837,23 +898,23 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
         ctx.stroke();
 
         ctx.fillStyle = 'rgba(255, 255, 255, 0.62)';
-        ctx.font = '700 12px "Plus Jakarta Sans", sans-serif';
+        ctx.font = `700 12px ${bodyFont}`;
         ctx.fillText(`${m.icon} ${m.label.toUpperCase()}`, bx + 14, by + 23);
 
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 20px Outfit, "Plus Jakarta Sans", sans-serif';
+        ctx.font = `bold 20px ${headingFont}`;
         ctx.fillText(m.val, bx + 14, by + 50);
 
         ctx.textAlign = 'right';
         ctx.fillStyle = theme.accentSecondaryHex;
-        ctx.font = '600 12px "Plus Jakarta Sans", sans-serif';
+        ctx.font = `600 12px ${bodyFont}`;
         ctx.fillText(m.sub, bx + boxW - 14, by + 49);
         ctx.textAlign = 'left';
       });
 
       // Verified Station Footer
       ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-      ctx.font = '600 12px "Plus Jakarta Sans", sans-serif';
+      ctx.font = `600 12px ${bodyFont}`;
       ctx.fillText(
         'WEATHERAETHER.APP  •  REAL-TIME ATMOSPHERIC TELEMETRY',
         innerX,
@@ -868,12 +929,12 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
       // City Name Centered
       ctx.textAlign = 'center';
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 58px Outfit, "Plus Jakarta Sans", sans-serif';
+      ctx.font = `bold 58px ${headingFont}`;
       ctx.fillText(`${weather.name}, ${weather.sys.country}`, centerX, pad + 185);
 
       // Condition Pill Centered
       const pillText = translatedDesc.toUpperCase();
-      ctx.font = '700 16px "Plus Jakarta Sans", sans-serif';
+      ctx.font = `700 16px ${bodyFont}`;
       const pillW = ctx.measureText(pillText).width + 44;
       const pillH = 38;
       const pillX = centerX - pillW / 2;
@@ -895,12 +956,12 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
 
       // Giant Temperature Centered
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 140px Outfit, "Plus Jakarta Sans", sans-serif';
+      ctx.font = `bold 140px ${headingFont}`;
       ctx.fillText(`${Math.round(weather.main.temp)}${unitSymbol}`, centerX, pad + 625);
 
       // Feels Like & Range
       ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-      ctx.font = '600 24px "Plus Jakarta Sans", sans-serif';
+      ctx.font = `600 24px ${bodyFont}`;
       ctx.fillText(
         `${t.feelsLike} ${Math.round(weather.main.feels_like)}°   •   Max ${Math.round(
           weather.main.temp_max
@@ -912,7 +973,7 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
       // Custom Note Quote Box if present
       if (customNote.trim()) {
         ctx.fillStyle = theme.accentHex;
-        ctx.font = 'italic 600 21px "Plus Jakarta Sans", sans-serif';
+        ctx.font = `italic 600 21px ${bodyFont}`;
         ctx.fillText(`"${customNote.trim().slice(0, 75)}"`, centerX, pad + 722);
       }
       ctx.textAlign = 'left';
@@ -942,22 +1003,22 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
         ctx.stroke();
 
         ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
-        ctx.font = '700 15px "Plus Jakarta Sans", sans-serif';
+        ctx.font = `700 15px ${bodyFont}`;
         ctx.fillText(`${m.icon}  ${m.label.toUpperCase()}`, bx + 22, by + 36);
 
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 30px Outfit, "Plus Jakarta Sans", sans-serif';
+        ctx.font = `bold 30px ${headingFont}`;
         ctx.fillText(m.val, bx + 22, by + 76);
 
         ctx.fillStyle = theme.accentSecondaryHex;
-        ctx.font = '600 14px "Plus Jakarta Sans", sans-serif';
+        ctx.font = `600 14px ${bodyFont}`;
         ctx.fillText(m.sub, bx + 22, by + 98);
       });
 
       // Footer
       ctx.textAlign = 'center';
       ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-      ctx.font = '600 14px "Plus Jakarta Sans", sans-serif';
+      ctx.font = `600 14px ${bodyFont}`;
       ctx.fillText(
         '✦ WEATHERAETHER.APP  •  REAL-TIME ATMOSPHERIC TELEMETRY ✦',
         centerX,
@@ -1349,6 +1410,10 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
               <div className="preview-branding" style={{ color: theme.accentHex }}>
                 <CloudSun size={17} color={theme.accentHex} />
                 <span>WeatherAether</span>
+                <span className="preview-live-badge">
+                  <span className="preview-live-dot" />
+                  LIVE
+                </span>
               </div>
               {showCoords && (
                 <span className="preview-coords-chip">
@@ -1364,7 +1429,15 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
                 {timeFormatted} &bull; {dateFormatted}
               </span>
               <span className="preview-sun-mini">
-                🌅 {sunriseStr} &nbsp;&bull;&nbsp; 🌇 {sunsetStr}
+                <span className="sun-mini-pair">
+                  <Sunrise size={11} color="#fbbf24" />
+                  <span>{sunriseStr}</span>
+                </span>
+                <span className="sun-mini-sep">&bull;</span>
+                <span className="sun-mini-pair">
+                  <Sunset size={11} color="#fb923c" />
+                  <span>{sunsetStr}</span>
+                </span>
               </span>
             </div>
           </div>
@@ -1398,14 +1471,25 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
                   {t.feelsLike} <strong>{Math.round(weather.main.feels_like)}°</strong>
                 </span>
                 <span className="range-tag" style={{ color: theme.accentSecondaryHex }}>
-                  H: {Math.round(weather.main.temp_max)}° &bull; L:{' '}
+                  ↑ {Math.round(weather.main.temp_max)}° &bull; ↓{' '}
                   {Math.round(weather.main.temp_min)}°
                 </span>
               </div>
             </div>
 
-            <div className="preview-art">
-              <WeatherHeroArt weatherId={condition.id} isNight={isNight} />
+            <div className="preview-art-showcase">
+              <div
+                className="preview-art"
+                style={{
+                  borderColor: theme.pillBorderRgba,
+                  background: `radial-gradient(circle at 50% 45%, ${theme.nebulaTopRgba} 0%, rgba(15, 23, 42, 0.35) 75%)`,
+                }}
+              >
+                <WeatherHeroArt weatherId={condition.id} isNight={isNight} />
+              </div>
+              <span className="preview-art-caption">
+                ☁ {weather.clouds?.all ?? 20}% &bull; WMO #{condition.id}
+              </span>
             </div>
           </div>
 
@@ -1426,7 +1510,9 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
           {/* 6-Item Telemetry Grid */}
           <div className="preview-metrics">
             <div className="p-item">
-              <Wind size={14} color={theme.accentSecondaryHex} />
+              <div className="p-item-icon-box">
+                <Wind size={14} color={theme.accentSecondaryHex} />
+              </div>
               <div className="p-item-text">
                 <span className="p-item-label">{t.wind}</span>
                 <strong className="p-item-val">
@@ -1436,7 +1522,9 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
             </div>
 
             <div className="p-item">
-              <Droplets size={14} color={theme.accentSecondaryHex} />
+              <div className="p-item-icon-box">
+                <Droplets size={14} color={theme.accentSecondaryHex} />
+              </div>
               <div className="p-item-text">
                 <span className="p-item-label">{t.humidity}</span>
                 <strong className="p-item-val">
@@ -1446,7 +1534,9 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
             </div>
 
             <div className="p-item">
-              <Gauge size={14} color={theme.accentSecondaryHex} />
+              <div className="p-item-icon-box">
+                <Gauge size={14} color={theme.accentSecondaryHex} />
+              </div>
               <div className="p-item-text">
                 <span className="p-item-label">{t.airPressure}</span>
                 <strong className="p-item-val">{weather.main.pressure} hPa</strong>
@@ -1454,15 +1544,19 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
             </div>
 
             <div className="p-item">
-              <Leaf size={14} color={theme.accentSecondaryHex} />
+              <div className="p-item-icon-box">
+                <Leaf size={14} color={theme.accentSecondaryHex} />
+              </div>
               <div className="p-item-text">
-                <span className="p-item-label">{ lang === 'id' ? 'Kualitas Udara' : 'Air Quality' }</span>
+                <span className="p-item-label">{lang === 'id' ? 'Kualitas Udara' : 'Air Quality'}</span>
                 <strong className="p-item-val">AQI {aqiLabel}</strong>
               </div>
             </div>
 
             <div className="p-item">
-              <Eye size={14} color={theme.accentSecondaryHex} />
+              <div className="p-item-icon-box">
+                <Eye size={14} color={theme.accentSecondaryHex} />
+              </div>
               <div className="p-item-text">
                 <span className="p-item-label">{lang === 'id' ? 'Jarak Pandang' : 'Visibility'}</span>
                 <strong className="p-item-val">{visibilityKm} km</strong>
@@ -1470,7 +1564,9 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
             </div>
 
             <div className="p-item">
-              <Sunrise size={14} color={theme.accentSecondaryHex} />
+              <div className="p-item-icon-box">
+                <Sunrise size={14} color={theme.accentSecondaryHex} />
+              </div>
               <div className="p-item-text">
                 <span className="p-item-label">{lang === 'id' ? 'Siklus Surya' : 'Sun Cycle'}</span>
                 <strong className="p-item-val">
@@ -1504,19 +1600,20 @@ ${t.feelsLike}: ${Math.round(weather.main.feels_like)}° | Min: ${Math.round(
                 {(Object.keys(CARD_THEMES) as CardThemeId[]).map((tKey) => {
                   const tc = CARD_THEMES[tKey];
                   const active = selectedTheme === tKey;
+                  const themeLabel = tc.name[lang === 'id' || lang === 'ms' ? 'id' : 'en'];
                   return (
                     <button
                       key={tKey}
                       type="button"
                       className={`studio-theme-btn ${active ? 'active' : ''}`}
                       onClick={() => setSelectedTheme(tKey)}
-                      title={tc.name[lang]}
+                      title={themeLabel}
                     >
                       <span
                         className="theme-swatch-dot"
                         style={{ background: tc.swatch }}
                       />
-                      <span>{tc.name[lang]}</span>
+                      <span>{themeLabel}</span>
                     </button>
                   );
                 })}

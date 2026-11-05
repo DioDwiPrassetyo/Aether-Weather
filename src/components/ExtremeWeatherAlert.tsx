@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Eye,
   Snowflake,
+  Volume2,
 } from 'lucide-react';
 import {
   CurrentWeatherResponse,
@@ -22,6 +23,8 @@ import { Language, getTranslation } from '@/utils/i18n';
 import {
   isNotificationActive,
   sendWeatherNotification,
+  isSirenEnabled,
+  playWeatherAlertSiren,
 } from '@/utils/notificationUtils';
 import {
   DEFAULT_ALERT_PREFERENCES,
@@ -208,21 +211,27 @@ export const ExtremeWeatherAlert: React.FC<ExtremeWeatherAlertProps> = ({
   const activeAlerts = alerts.filter((a) => !dismissed.includes(a.id));
   const activeAlertKey = activeAlerts.map((alert) => alert.id).join('|');
   useEffect(() => {
-    if (!isNotificationActive()) return;
     const now = Date.now();
-    activeAlerts.forEach((alert) => {
+    activeAlerts.forEach((alert, idx) => {
       const key = `aether-alert-notified:${current.id}:${alert.id}`;
       const lastNotified = Number(localStorage.getItem(key) || 0);
       if (now - lastNotified < 3 * 60 * 60 * 1000) return;
       localStorage.setItem(key, String(now));
-      sendWeatherNotification(alert.title, {
-        body: `${current.name}: ${alert.message} ${
-          lang === 'id'
-            ? 'Indikasi otomatis, bukan peringatan resmi.'
-            : 'Automated indication, not an official warning.'
-        }`,
-        tag: key,
-      });
+
+      if (idx === 0 && isSirenEnabled()) {
+        playWeatherAlertSiren(alert.type === 'danger' ? 'danger' : 'warning');
+      }
+
+      if (isNotificationActive()) {
+        sendWeatherNotification(alert.title, {
+          body: `${current.name}: ${alert.message} ${
+            lang === 'id'
+              ? 'Indikasi otomatis, bukan peringatan resmi.'
+              : 'Automated indication, not an official warning.'
+          }`,
+          tag: key,
+        });
+      }
     });
   }, [current.id, current.name, current.dt, activeAlertKey, lang]);
   if (activeAlerts.length === 0) return null;
@@ -250,8 +259,26 @@ export const ExtremeWeatherAlert: React.FC<ExtremeWeatherAlertProps> = ({
           <div className="alert-header-row">
             <span className="alert-title">{topAlert.title}</span>
             <span className="alert-type-badge">
-              {lang === 'id' ? 'INDIKASI' : 'ESTIMATE'}
+              {lang === 'id' ? 'PERINGATAN DINI' : 'EARLY WARNING'}
             </span>
+            <button
+              type="button"
+              className="alert-type-badge"
+              style={{
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                border: '1px solid rgba(56, 189, 248, 0.35)',
+                background: 'rgba(56, 189, 248, 0.14)',
+                color: '#7dd3fc',
+              }}
+              onClick={() => playWeatherAlertSiren(topAlert.type === 'danger' ? 'danger' : 'warning')}
+              title={lang === 'id' ? 'Bunyikan Sirine Peringatan Audio' : 'Play Audio Alert Siren'}
+            >
+              <Volume2 size={12} />
+              <span>{lang === 'id' ? 'Sirine Audio' : 'Audio Siren'}</span>
+            </button>
             {activeAlerts.length > 1 && (
               <span className="alert-badge-count">
                 +{activeAlerts.length - 1} {lang === 'id' ? 'peringatan lainnya' : 'more alerts'}
